@@ -89,7 +89,7 @@ val player = provider.player
 // 设置播放状态（true 表示正在播放）
 player.setPlaybackState(true)
 
-// 发送纯文本歌词。（2026/1/26 提示：此方法还没有实现！！！！）
+// 发送纯文本歌词。
 player.sendText("我无法只是普通朋友")
 ```
 
