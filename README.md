@@ -1,3 +1,4 @@
+<!--suppress ALL -->
 <p align="center">
   <img src="resources/logo.svg" width="100" alt="词幕 Logo"/>
 </p>
@@ -39,7 +40,7 @@
 
 ### 2. 安装步骤
 1. [下载并安装词幕主体](https://github.com/proify/lyricon/releases)
-2. 在 LSPosed 管理器中**勾选启用**词幕模块（推荐勾选“系统界面”作用域）。
+2. 在 LSPosed 管理器中**勾选启用**词幕模块（勾选“系统界面”作用域）。
 3. 根据你的播放器需求，安装对应的 [歌词插件](https://github.com/proify/LyricProvider)。
 4. 重启 **系统界面** (SystemUI)。
 
