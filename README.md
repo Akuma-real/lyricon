@@ -25,7 +25,7 @@
 
 ## ✨ 功能特色
 
-- 🧩 **模块化架构**：核心与插件分离，通过 [LyricProvider](https://github.com/proify/LyricProvider) 实现无限歌词源扩展。
+- 🧩 **模块化架构**：核心与插件分离，实现无限歌词源扩展。
 - 🎨 **极致自定义**：支持字体、颜色、偏移量及动画效果的深度微调，完美契合各类系统主题。
 - ⚡ **高性能**：针对系统界面（SystemUI）注入进行优化，低能耗、无感延迟。
 - 🔓 **开源透明**：项目完全开源，确保系统级操作的安全与纯净。
@@ -35,23 +35,28 @@
 ## 🚀 快速上手
 
 ### 1. 环境准备
+
 - 确认设备已获取 **Root** 权限。
 - 确保已安装并激活 **LSPosed**（建议使用最新的内测版本以获得最佳兼容性）。
 
 ### 2. 安装步骤
+
 1. [下载并安装词幕主体](https://github.com/proify/lyricon/releases)
 2. 在 LSPosed 管理器中**勾选启用**词幕模块（勾选“系统界面”作用域）。
-3. 根据你的播放器需求，安装对应的 [歌词插件](https://github.com/proify/LyricProvider)。
-4. 重启 **系统界面** (SystemUI)。
-
+3. 重启 **系统界面** (SystemUI)。
+4. 根据你的播放器需求，安装对应的 [歌词插件](https://github.com/proify/LyricProvider)。
 ---
 
 ## 🧩 插件生态
 
-| 类型       | 链接                                                                                      | 说明                     |
-|:---------|:----------------------------------------------------------------------------------------|:-----------------------|
-| **获取插件** | [点击前往插件库](https://github.com/proify/LyricProvider)                                      | 下载适配各音乐 App 的 Provider |
-| **开发指南** | [查看开发文档](https://github.com/proify/lyricon/blob/master/lyric/bridge/provider/README.md) | 欢迎开发者为更多 App 适配歌词接口    |
+| 类型       | 链接                                                                                      | 说明              |
+|:---------|:----------------------------------------------------------------------------------------|:----------------|
+| **获取插件** | [点击前往插件库](https://github.com/proify/LyricProvider)                                      | 目前已适配的歌词源插件     |
+| **开发指南** | [查看开发文档](https://github.com/proify/lyricon/blob/master/lyric/bridge/provider/README.md) | 欢迎开发者为更多 App 适配 |
+
+### 🎉 以下软件开发者已适配
+
+- [光锥音乐](https://coneplayer.trantor.ink/) - 优雅的本地音乐播放器
 
 ---
 
@@ -67,6 +72,7 @@
 - **代码贡献**：欢迎提交 Pull Request，一起让词幕变得更好！
 
 ### 核心贡献者
+
 [![Contributors](https://contrib.rocks/image?repo=proify/lyricon)](https://github.com/proify/lyricon/graphs/contributors)
 
 ---
