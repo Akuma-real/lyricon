@@ -87,7 +87,7 @@ fun SuperArrow(
 }
 
 @Composable
-private fun RowScope.SuperArrowRightActions(
+fun RowScope.SuperArrowRightActions(
     rightActions: @Composable RowScope.() -> Unit,
     enabled: Boolean,
 ) {

@@ -22,6 +22,10 @@ import top.yukonga.miuix.kmp.theme.darkColorScheme
 import top.yukonga.miuix.kmp.theme.lightColorScheme
 import top.yukonga.miuix.kmp.theme.platformDynamicColors
 
+object CurrentThemeConfigs {
+    var isDark: Boolean = false
+}
+
 @Composable
 fun AppTheme(
     content: @Composable () -> Unit
@@ -29,6 +33,7 @@ fun AppTheme(
     val view = LocalView.current
     val activity = view.context as? Activity
     val colors = rememberAppColors()
+    CurrentThemeConfigs.isDark = colors.isDark
 
     SideEffect {
         activity?.window?.let { window ->
@@ -61,7 +66,7 @@ private fun rememberAppColors(): AppColors {
 }
 
 @Composable
-private fun resolveDarkMode(context: android.content.Context): Boolean =
+fun resolveDarkMode(context: android.content.Context): Boolean =
     when (AppThemeUtils.getMode(context)) {
         AppThemeUtils.MODE_LIGHT -> false
         AppThemeUtils.MODE_DARK -> true

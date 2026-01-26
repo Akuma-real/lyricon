@@ -65,6 +65,7 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
                 addView(recycleTextLineView, reusableLayoutParams)
                 updateTextLineViewStyle(config)
             }
+
             recycleTextLineView.setLyric(LyricLine(text = value, end = 114514))
             recycleTextLineView.post {
                 recycleTextLineView.startMarquee()

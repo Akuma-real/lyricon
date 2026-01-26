@@ -16,10 +16,7 @@
     </style>
 
     <style name="Theme.DayNight" parent="Theme.Light" />
-    >
 
     <style name="Theme.SplashScreen.DayNight" parent="Theme.DayNight" />
-
     <style name="Theme.SplashScreen" parent="Theme.SplashScreen.DayNight" />
-
 </resources>

@@ -16,6 +16,7 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import io.github.proify.lyricon.app.compose.theme.CurrentThemeConfigs
 import io.github.proify.lyricon.app.ui.activity.MainActivity
 
 object Utils {
@@ -52,6 +53,7 @@ fun Activity.restartApp() {
 fun Context.launchBrowser(
     url: String,
     toolbarColor: Int? = null,
+    darkTheme: Boolean = CurrentThemeConfigs.isDark
 ) {
     val colorSchemeParamsBuilder = CustomTabColorSchemeParams.Builder()
     if (toolbarColor != null) {
@@ -60,7 +62,7 @@ fun Context.launchBrowser(
     val customTabs =
         CustomTabsIntent
             .Builder()
-            .setColorScheme(CustomTabsIntent.COLOR_SCHEME_SYSTEM)
+            .setColorScheme(if (darkTheme) CustomTabsIntent.COLOR_SCHEME_DARK else CustomTabsIntent.COLOR_SCHEME_LIGHT)
             .setDefaultColorSchemeParams(colorSchemeParamsBuilder.build())
             .build()
     customTabs.launchUrl(this, url.toUri())

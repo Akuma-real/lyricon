@@ -74,6 +74,8 @@ val provider = LyriconProvider(
 
 ### 连接状态监听
 
+> 你一般不需要配置自动断连，因为内部会自动处理断连。
+
 ```kotlin
 provider.service.addConnectionListener {
     onConnected { }
@@ -124,7 +126,7 @@ player.setSong(
 
 ### 2. 按行时间轴歌词
 
-仅包含行级起止时间，适用于逐行高亮显示：
+仅包含行级起止时间，适用于只有Lrc格式的歌词场景：
 
 ```kotlin
 player.setSong(
@@ -146,6 +148,9 @@ player.setSong(
         )
     )
 )
+
+//设置Song之后，同步设置播放进度
+player.setPosition(100)
 ```
 
 ### 3. 完整歌词结构（逐字 / 次要歌词 / 翻译）

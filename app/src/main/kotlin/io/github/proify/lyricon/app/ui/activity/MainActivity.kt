@@ -183,7 +183,7 @@ class MainActivity : BaseActivity() {
         val title: String,
         val showAnimatedEmoji: Boolean = false,
         val summary: String? = null,
-        val rightActions: @Composable (RowScope.() -> Unit)? = null,
+        val rightActions: @Composable (RowScope.() -> Unit)? = null
     ) : CardStatus {
 
         override val content: @Composable ColumnScope.() -> Unit = {
@@ -235,7 +235,7 @@ class MainActivity : BaseActivity() {
     fun MainContent(
         model: MainViewModel? = null,
         onRestartSystemUI: () -> Unit = {},
-        onRestartApp: () -> Unit = {},
+        onRestartApp: () -> Unit = {}
     ) {
         val cardStatus = determineCardStatus(
             safeMode = model?.safeMode?.value ?: false,
@@ -302,7 +302,6 @@ class MainActivity : BaseActivity() {
                 )
             }
 
-            // 模块已激活
             return StatusCard(
                 colors = CardColors(MaterialPalette.Green.Primary, White),
                 icon = ImageVector.vectorResource(id = R.drawable.ic_check_circle),
@@ -312,7 +311,6 @@ class MainActivity : BaseActivity() {
             )
         }
 
-        // 模块未激活
         return StatusCard(
             colors = CardColors(MaterialPalette.Red.Primary, White),
             icon = ImageVector.vectorResource(id = R.drawable.ic_sentiment_dissatisfied),
@@ -341,7 +339,7 @@ class MainActivity : BaseActivity() {
         Card(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
         ) {
             SuperArrow(
                 leftAction = {
@@ -351,7 +349,7 @@ class MainActivity : BaseActivity() {
                 summary = stringResource(id = R.string.item_summary_base_lyric_style),
                 onClick = {
                     context.startActivity(Intent(context, BasicLyricStyleActivity::class.java))
-                },
+                }
             )
             SuperArrow(
                 leftAction = {
@@ -365,7 +363,7 @@ class MainActivity : BaseActivity() {
                 summary = stringResource(id = R.string.item_summary_package_style_manager),
                 onClick = {
                     context.startActivity(Intent(context, PackageStyleActivity::class.java))
-                },
+                }
             )
         }
     }
@@ -376,7 +374,7 @@ class MainActivity : BaseActivity() {
         Card(
             modifier = Modifier
                 .padding(start = 16.dp, top = 16.dp, end = 16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
         ) {
             SuperArrow(
                 leftAction = {
@@ -386,7 +384,7 @@ class MainActivity : BaseActivity() {
                 summary = stringResource(id = R.string.item_summary_provider_manager),
                 onClick = {
                     context.startActivity(Intent(context, LyricProviderActivity::class.java))
-                },
+                }
             )
         }
     }
@@ -397,7 +395,7 @@ class MainActivity : BaseActivity() {
         Card(
             modifier = Modifier
                 .padding(start = 16.dp, top = 16.dp, end = 16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
         ) {
             SuperArrow(
                 leftAction = {
@@ -407,7 +405,7 @@ class MainActivity : BaseActivity() {
                 summary = stringResource(id = R.string.item_summary_app_settings),
                 onClick = {
                     context.startActivity(Intent(context, SettingsActivity::class.java))
-                },
+                }
             )
             SuperArrow(
                 leftAction = {
@@ -417,7 +415,7 @@ class MainActivity : BaseActivity() {
                 summary = stringResource(id = R.string.item_summary_about_app),
                 onClick = {
                     context.startActivity(Intent(context, AboutActivity::class.java))
-                },
+                }
             )
         }
     }
@@ -426,7 +424,7 @@ class MainActivity : BaseActivity() {
     private fun ColoredIconBox(
         backgroundColor: Color,
         iconRes: Int,
-        iconSize: Dp = 24.dp,
+        iconSize: Dp = 24.dp
     ) {
         Box(
             modifier = Modifier
@@ -439,7 +437,7 @@ class MainActivity : BaseActivity() {
                 painter = painterResource(id = iconRes),
                 modifier = if (iconSize != 24.dp) Modifier.size(iconSize) else Modifier,
                 tint = White,
-                contentDescription = null,
+                contentDescription = null
             )
         }
     }
@@ -463,19 +461,19 @@ class MainActivity : BaseActivity() {
     @Composable
     private fun TopBarActions(
         onRestartSystemUI: () -> Unit,
-        onRestartApp: () -> Unit,
+        onRestartApp: () -> Unit
     ) {
         val showPopup = remember { mutableStateOf(false) }
 
         Box(modifier = Modifier.padding(end = 14.dp)) {
             IconButton(
-                onClick = { showPopup.value = true },
+                onClick = { showPopup.value = true }
             ) {
                 Icon(
                     modifier = Modifier.size(26.dp),
                     imageVector = MiuixIcons.Useful.Refresh,
                     contentDescription = stringResource(id = R.string.restart),
-                    tint = MiuixTheme.colorScheme.onSurface,
+                    tint = MiuixTheme.colorScheme.onSurface
                 )
             }
 
@@ -500,7 +498,7 @@ class MainActivity : BaseActivity() {
         ) {
             val menuItems = listOf(
                 stringResource(R.string.restart_system_ui),
-                stringResource(R.string.restart_app),
+                stringResource(R.string.restart_app)
             )
 
             ListPopupColumn {
@@ -513,7 +511,7 @@ class MainActivity : BaseActivity() {
                             if (index == 0) onRestartSystemUI() else onRestartApp()
                             showPopup.value = false
                         },
-                        index = index,
+                        index = index
                     )
                 }
             }

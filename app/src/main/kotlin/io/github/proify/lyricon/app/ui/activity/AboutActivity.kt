@@ -32,7 +32,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -141,8 +140,6 @@ class AboutActivity : BaseActivity() {
             }
 
             item("info") {
-                val context = LocalContext.current
-
                 Card(
                     modifier =
                         Modifier
@@ -190,9 +187,8 @@ class AboutActivity : BaseActivity() {
                         leftAction = { IconActions(painterResource(R.drawable.ic_license)) },
                         title = stringResource(id = R.string.item_open_source_license),
                         onClick = {
-                            val intent = Intent(context, LicensesActivity::class.java)
-                            context.startActivity(intent)
-                        },
+                            startActivity(Intent(this@AboutActivity, LicensesActivity::class.java))
+                        }
                     )
                 }
             }
