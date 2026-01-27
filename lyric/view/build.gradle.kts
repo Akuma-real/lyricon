@@ -29,7 +29,7 @@ configure<LibraryExtension> {
     }
 
     defaultConfig {
-        minSdk = rootProject.extra.get("minSdkVersion") as Int
+        minSdk = 21
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

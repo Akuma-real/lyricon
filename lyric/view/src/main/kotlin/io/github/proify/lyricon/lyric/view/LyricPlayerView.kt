@@ -28,15 +28,18 @@ import io.github.proify.lyricon.lyric.view.util.visibilityIfChanged
 import io.github.proify.lyricon.lyric.view.util.visible
 
 open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
-    LinearLayout(context, attrs) {
+    LinearLayout(context, attrs), UpdatableColor {
 
     companion object {
+        private const val TAG = "LyricPlayerView"
         internal const val KEY_SONG_TITLE_LINE: String = "TitleLine"
         private const val MIN_GAP_DURATION: Long = 6 * 1000
     }
 
     private var textMode = false
-    private val recycleTextLineView: LyricLineView by lazy { LyricLineView(context) }
+    private val recycleTextLineView: LyricLineView by lazy {
+        LyricLineView(context)
+    }
 
     private fun updateTextLineViewStyle(config: RichLyricLineConfig) {
         val lyricLineConfig = LyricLineConfig(
@@ -66,7 +69,7 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
                 updateTextLineViewStyle(config)
             }
 
-            recycleTextLineView.setLyric(LyricLine(text = value, end = 114514))
+            recycleTextLineView.setLyric(LyricLine(text = value, end = Long.MAX_VALUE / 10))
             recycleTextLineView.post {
                 recycleTextLineView.startMarquee()
             }
@@ -177,48 +180,6 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
         return view
     }
 
-//    internal fun updateViewsVisibility() {
-//        val childCount = childCount
-//        if (childCount == 0) return
-//
-//        val first = getChildAt(0) as? RichLyricLineView ?: return
-//
-//        for (i in 0 until childCount) {
-//            val view = getChildAt(i) as? RichLyricLineView ?: continue
-//
-//            view.visibility = VISIBLE
-//            view.main.setTextSize(config.primary.textSize)
-//            view.secondary.setTextSize(config.secondary.textSize)
-//
-//            when (i) {
-//                0 -> {
-//                    if (view.secondary.isVisible
-//                        && view.main.syllable.isPlayFinished()
-//                        && childCount > 1
-//                    ) {
-//                        view.main.visibilityIfChanged = GONE
-//                    }
-//                }
-//
-//                1 -> {
-//                    if (first.main.isVisible && first.secondary.isVisible) {
-//                        view.visibilityIfChanged = GONE
-//                    } else {
-//                        if (first.isVisible && first.main.isVisible) {
-//                            view.main.setTextSize(config.secondary.textSize)
-//                            view.secondary.setTextSize(config.primary.textSize)
-//                        }
-//                    }
-//                }
-//
-//                else -> {
-//                    view.visibilityIfChanged = GONE
-//                }
-//            }
-//        }
-//    }
-
-
     /**
      * 更新歌词行视图的可见性及字体大小。
      * 采用状态预计算逻辑，确保字号缩放基于全局可见组件总数。
@@ -301,8 +262,7 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
             }
         }
 
-        invalidate()
-        requestLayout()
+        postInvalidateOnAnimation()
     }
 
     /**
@@ -324,7 +284,6 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
             view.secondary.setTextSize(secondarySize)
         }
     }
-
 
     fun setDisplayTranslation(displayTranslation: Boolean) {
         isDisplayTranslation = displayTranslation
@@ -354,14 +313,9 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
         val matches = tempFindActiveLines
         updateActiveViews(matches)
 
-        this.forEach { view ->
-            if (view is RichLyricLineView) {
-                if (seekTo) {
-                    view.seekTo(position)
-                } else {
-                    view.setPosition(position)
-                }
-            }
+        forEach { view ->
+            if (view is RichLyricLineView)
+                if (seekTo) view.seekTo(position) else view.setPosition(position)
         }
 
         handleInterlude(position, matches)
@@ -394,9 +348,7 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
 
         // 1. 若已有间奏，优先校验是否仍然命中
         interludeState?.let { state ->
-            if (position > state.start && position < state.end) {
-                return state
-            }
+            if (position > state.start && position < state.end) return state
         }
 
         // 2. 尝试基于当前歌词重新构建间奏
@@ -501,8 +453,18 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
         addView(view, reusableLayoutParams)
     }
 
-    fun updateColor(primaryColor: Int, backgroundColor: Int, highlightColor: Int) {
-        getStyle().apply {
+    override fun updateColor(primaryColor: Int, backgroundColor: Int, highlightColor: Int) {
+        val needUpdate =
+            primaryColor != config.primary.textColor
+                    || primaryColor != config.secondary.textColor
+                    || backgroundColor != config.syllable.backgroundColor
+                    || highlightColor != config.syllable.highlightColor
+
+        if (!needUpdate) {
+            return
+        }
+
+        config.apply {
             primary.apply {
                 textColor = primaryColor
             }
@@ -515,31 +477,18 @@ open class LyricPlayerView(context: Context, attrs: AttributeSet? = null) :
             }
         }
 
-        forEach { view ->
-            if (view is RichLyricLineView) {
-                view.updateColor(
-                    primaryColor,
-                    backgroundColor,
-                    highlightColor
-                )
-            } else if (view is LyricLineView) {
-                view.updateColor(
-                    primaryColor,
-                    backgroundColor,
-                    highlightColor
-                )
-            }
+        forEach {
+            if (it is UpdatableColor)
+                it.updateColor(primaryColor, backgroundColor, highlightColor)
         }
     }
 
     fun setStyle(config: RichLyricLineConfig): LyricPlayerView = apply {
         this.config = config
-        if (textMode) {
-            updateTextLineViewStyle(config)
-        } else {
-            forEach { view ->
-                if (view is RichLyricLineView) view.setStyle(config)
-            }
+        updateTextLineViewStyle(config)
+
+        forEach { view ->
+            if (view is RichLyricLineView) view.setStyle(config)
         }
     }
 

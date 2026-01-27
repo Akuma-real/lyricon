@@ -9,6 +9,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
+import android.util.Log
 import androidx.core.content.pm.PackageInfoCompat
 import com.highcapable.yukihookapi.hook.factory.dataChannel
 import com.highcapable.yukihookapi.hook.xposed.application.ModuleApplication
@@ -22,6 +23,8 @@ import io.github.proify.lyricon.common.util.safe
 class LyriconApp : ModuleApplication() {
 
     companion object {
+        const val TAG: String = "LyriconApp"
+
         @SuppressLint("StaticFieldLeak")
         lateinit var instance: LyriconApp
 
@@ -58,6 +61,12 @@ class LyriconApp : ModuleApplication() {
         super.getSharedPreferences(name, mode).safe()
 }
 
-fun updateLyricStyle() {
+fun updateRemoteLyricStyle() {
+    fun getCallSourceMethod(): String {
+        val stackTrace = Thread.currentThread().stackTrace
+        return stackTrace[3].methodName
+    }
+
+    Log.d(LyriconApp.TAG, "updateRemoteLyricStyle called from ${getCallSourceMethod()}")
     systemUIChannel.put(AppBridgeConstants.REQUEST_UPDATE_LYRIC_STYLE)
 }

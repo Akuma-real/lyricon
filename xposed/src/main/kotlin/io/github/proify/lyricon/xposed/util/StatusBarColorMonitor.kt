@@ -18,6 +18,7 @@ import com.highcapable.yukihookapi.hook.log.YLog
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
+import io.github.proify.android.extensions.setColorAlpha
 import java.lang.reflect.Method
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -213,14 +214,5 @@ data class StatusBarColor(
     @field:ColorInt var color: Int = 0,
     var lightMode: Boolean = false
 ) {
-    /**
-     * 获取对比色
-     */
-    @ColorInt
-    fun getContrastColor(
-        @ColorInt darkColor: Int = Color.BLACK,
-        @ColorInt lightColor: Int = Color.WHITE
-    ): Int {
-        return if (lightMode) darkColor else lightColor
-    }
+    val translucentColor: Int by lazy { color.setColorAlpha(0.5f) }
 }

@@ -4,7 +4,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-package io.github.proify.lyricon.xposed.lyricview
+package io.github.proify.lyricon.xposed.hook.systemui.lyricview
 
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator

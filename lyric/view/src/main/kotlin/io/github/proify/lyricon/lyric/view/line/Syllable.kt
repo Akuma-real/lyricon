@@ -9,9 +9,15 @@ package io.github.proify.lyricon.lyric.view.line
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.RenderNode
 import android.graphics.Shader
+import android.graphics.Typeface
+import android.os.Build
 import android.text.TextPaint
+import androidx.annotation.RequiresApi
 import androidx.core.graphics.withSave
 import io.github.proify.lyricon.lyric.view.LyricPlayListener
 import io.github.proify.lyricon.lyric.view.line.model.LyricModel
@@ -21,170 +27,190 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * 歌词行渲染控制器，负责协调动画、滚动与绘制逻辑
+ * 歌词行渲染控制器
+ * 采用委托模式管理渲染路径（Legacy Canvas 或 API 29+ RenderNode），
+ * 并通过 Matrix 复用 Shader 彻底消除逐帧动画过程中的 GC 内存抖动。
  */
-class Syllable(private val ownerView: LyricLineView) {
+class Syllable(private val view: LyricLineView) {
 
-    val inactivePaint: TextPaint = TextPaint(TextPaint.ANTI_ALIAS_FLAG)
-    val activePaint: TextPaint = TextPaint(TextPaint.ANTI_ALIAS_FLAG)
+    // --- 绘图画笔 ---
+    private val inactivePaint = TextPaint(Paint.ANTI_ALIAS_FLAG) // 底色画笔
+    private val activePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)   // 高亮色画笔
 
-    var enableGradient: Boolean = true
-        set(value) {
-            field = value
-            renderer.enableGradient = value
-        }
+    // --- 核心组件 ---
+    private val renderDelegate: LineRenderDelegate = createRenderDelegate()
+    private val sharedRenderer = SharedLineRenderer()
 
-    var onlyScrollMode: Boolean = false
-        set(value) {
-            field = value
-            renderer.onlyScrollMode = value
-        }
+    // --- 状态管理 ---
+    private val progressAnimator = ProgressAnimator() // 处理高亮宽度动画
+    private val scrollController = ScrollController() // 处理溢出文本的 X 轴偏移
+    private var lastUpdatePosition = Long.MIN_VALUE
 
     var playListener: LyricPlayListener? = null
 
-    private val karaokeAnimator = KaraokeAnimator()
-    private val autoScroller = AutoScroller()
-    private val renderer = LineRenderer()
+    /** 是否启用高亮边缘的渐变消隐效果 */
+    var isGradientEnabled: Boolean = true
+        set(value) {
+            if (field != value) {
+                field = value
+                renderDelegate.isGradientEnabled = value
+                renderDelegate.notifyDirty()
+            }
+        }
 
-    private val cachedLayoutInfo = LineRenderer.LayoutInfo()
-    private val cachedPaintContext = LineRenderer.PaintContext(
-        ownerView.textPaint, inactivePaint, activePaint
-    )
+    /** 纯滚动模式：仅根据时间滚动文本，不绘制高亮覆盖层 */
+    var isOnlyScrollMode: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value
+                renderDelegate.isOnlyScrollMode = value
+                renderDelegate.notifyDirty()
+            }
+        }
 
-    private var lastPlayPosition: Long = Long.MIN_VALUE
+    // 状态对外暴露
+    val textSize: Float get() = inactivePaint.textSize
+    val isStarted: Boolean get() = progressAnimator.hasStarted
+    val isPlaying: Boolean get() = progressAnimator.isAnimating
+    val isFinished: Boolean get() = progressAnimator.hasFinished
 
-    fun isPlayStarted(): Boolean = karaokeAnimator.hasStarted
+    init {
+        syncLayoutInfo()
+    }
 
-    fun isPlaying(): Boolean = karaokeAnimator.isPlaying
+    // --- 公开 API 配置接口 ---
 
-    fun isPlayFinished(): Boolean = karaokeAnimator.hasFinished
+    fun setColor(backgroundColor: Int, highlightColor: Int) {
+        if (inactivePaint.color != backgroundColor || activePaint.color != highlightColor) {
+            inactivePaint.color = backgroundColor
+            activePaint.color = highlightColor
+            sharedRenderer.clearShaderCache() // 颜色改变需强制刷新渐变器
+            renderDelegate.notifyDirty()
+        }
+    }
 
-    /**
-     * 重置所有动画状态与滚动偏移
-     */
+    fun setTextSize(size: Float) {
+        if (inactivePaint.textSize != size) {
+            inactivePaint.textSize = size
+            activePaint.textSize = size
+            sharedRenderer.updateFontMetrics(inactivePaint) // 重新计算基线对齐参数
+            renderDelegate.notifyDirty()
+        }
+    }
+
+    fun setTypeface(typeface: Typeface) {
+        if (inactivePaint.typeface != typeface) {
+            inactivePaint.setTypeface(typeface)
+            activePaint.setTypeface(typeface)
+            sharedRenderer.updateFontMetrics(inactivePaint)
+            renderDelegate.notifyDirty()
+        }
+    }
+
+    /** 重置行状态，清空所有播放进度与滚动位置 */
     fun reset() {
-        karaokeAnimator.reset()
-        autoScroller.reset(ownerView)
-        lastPlayPosition = Long.MIN_VALUE
+        progressAnimator.reset()
+        scrollController.reset(view)
+        lastUpdatePosition = Long.MIN_VALUE
+        renderDelegate.onHighlightUpdated(0f)
     }
 
-    /**
-     * 立即跳转至指定播放位置，无平滑过渡
-     */
+    /** 定位到特定时间戳，用于 Seek 操作，不触发平滑插值 */
     fun seek(position: Long) {
-        val model = ownerView.lyricModel
-        val currentWord = model.wordTimingNavigator.first(position)
-        val targetWidth = calculateTargetWidth(position, model, currentWord)
+        val model = view.lyricModel
+        val word = model.wordTimingNavigator.first(position)
+        val targetWidth = resolveTargetWidth(position, model, word)
 
-        karaokeAnimator.jumpTo(targetWidth)
-        autoScroller.update(targetWidth, ownerView, smooth = false)
+        progressAnimator.jumpTo(targetWidth)
+        scrollController.updateScroll(targetWidth, view)
+        renderDelegate.onHighlightUpdated(targetWidth)
 
-        lastPlayPosition = position
-        dispatchProgressEvents()
+        lastUpdatePosition = position
+        notifyProgress()
     }
 
-    /**
-     * 根据当前播放进度更新高亮目标值
-     */
+    /** 由播放器时钟驱动，根据当前时间更新高亮目标宽度 */
     fun updateProgress(position: Long) {
-        if (lastPlayPosition != Long.MIN_VALUE && position < lastPlayPosition) {
+        if (lastUpdatePosition != Long.MIN_VALUE && position < lastUpdatePosition) {
             seek(position)
             return
         }
 
-        val model = ownerView.lyricModel
-        val currentWord = model.wordTimingNavigator.first(position)
-        val targetWidth = calculateTargetWidth(position, model, currentWord)
+        val model = view.lyricModel
+        val word = model.wordTimingNavigator.first(position)
+        val targetWidth = resolveTargetWidth(position, model, word)
 
-        if (currentWord != null && karaokeAnimator.currentWidth == 0f) {
-            currentWord.previous?.let { karaokeAnimator.jumpTo(it.endPosition) }
+        // 单词间衔接处理：若当前词刚开始，先跳转到上一个词末尾，避免进度跳跃
+        if (word != null && progressAnimator.currentWidth == 0f) {
+            word.previous?.let { progressAnimator.jumpTo(it.endPosition) }
         }
 
-        if (targetWidth != karaokeAnimator.targetWidth) {
-            karaokeAnimator.animateTo(targetWidth, currentWord?.duration ?: 0)
+        if (targetWidth != progressAnimator.targetWidth) {
+            progressAnimator.startAnimation(targetWidth, word?.duration ?: 0)
         }
 
-        lastPlayPosition = position
+        lastUpdatePosition = position
     }
 
-    /**
-     * 驱动每一帧的动画计算
-     * @return 如果状态发生改变需要重绘则返回 true
-     */
-    fun updateFrame(frameTimeNanos: Long): Boolean {
-        val isHighlightChanged = karaokeAnimator.update(frameTimeNanos)
-
-        if (isHighlightChanged) {
-            autoScroller.update(karaokeAnimator.currentWidth, ownerView, smooth = true)
-            dispatchProgressEvents()
+    /** 逐帧刷新入口，返回是否需要重绘 UI */
+    fun onFrameUpdate(frameTimeNanos: Long): Boolean {
+        if (progressAnimator.doStep(frameTimeNanos)) {
+            scrollController.updateScroll(progressAnimator.currentWidth, view)
+            renderDelegate.onHighlightUpdated(progressAnimator.currentWidth)
+            notifyProgress()
+            return true
         }
-
-        return isHighlightChanged
+        return false
     }
 
-    /**
-     * 执行 Canvas 绘制指令
-     */
+    /** 绘制入口 */
     fun draw(canvas: Canvas) {
-        cachedLayoutInfo.update(
-            viewWidth = ownerView.measuredWidth,
-            viewHeight = ownerView.measuredHeight,
-            scrollX = ownerView.scrollXOffset,
-            isOverflow = ownerView.isOverflow()
-        )
-
-        renderer.draw(
-            canvas = canvas,
-            model = ownerView.lyricModel,
-            layoutInfo = cachedLayoutInfo,
-            paints = cachedPaintContext,
-            highlightWidth = karaokeAnimator.currentWidth
-        )
+        syncLayoutInfo()
+        renderDelegate.draw(canvas, view.scrollXOffset)
     }
 
-    private fun calculateTargetWidth(
-        position: Long,
-        model: LyricModel,
-        currentWord: WordModel?
-    ): Float {
-        return when {
-            currentWord != null -> currentWord.endPosition
-            position >= model.end -> ownerView.lyricWidth
-            position <= model.begin -> 0f
-            else -> karaokeAnimator.currentWidth
-        }
+    // --- 内部辅助逻辑 ---
+
+    private fun syncLayoutInfo() {
+        sharedRenderer.updateFontMetrics(inactivePaint)
+        renderDelegate.onLayoutChanged(view.measuredWidth, view.measuredHeight, view.isOverflow())
     }
 
-    private fun dispatchProgressEvents() {
-        val current = karaokeAnimator.currentWidth
-        val total = ownerView.lyricWidth
-
-        if (!karaokeAnimator.hasStarted && current > 0f) {
-            karaokeAnimator.hasStarted = true
-            playListener?.onPlayStarted(ownerView)
-        }
-        if (!karaokeAnimator.hasFinished && current >= total) {
-            karaokeAnimator.hasFinished = true
-            playListener?.onPlayEnded(ownerView)
-        }
-        playListener?.onPlayProgress(ownerView, total, current)
+    private fun resolveTargetWidth(pos: Long, model: LyricModel, word: WordModel?): Float = when {
+        word != null -> word.endPosition
+        pos >= model.end -> view.lyricWidth
+        pos <= model.begin -> 0f
+        else -> progressAnimator.currentWidth
     }
 
-    /**
-     * 处理卡拉OK高亮宽度的数值平滑过渡
-     */
-    private class KaraokeAnimator {
+    private fun notifyProgress() {
+        val current = progressAnimator.currentWidth
+        val total = view.lyricWidth
+
+        if (!progressAnimator.hasStarted && current > 0f) {
+            progressAnimator.hasStarted = true
+            playListener?.onPlayStarted(view)
+        }
+        if (!progressAnimator.hasFinished && current >= total) {
+            progressAnimator.hasFinished = true
+            playListener?.onPlayEnded(view)
+        }
+        playListener?.onPlayProgress(view, total, current)
+    }
+
+    // --- 动画与滚动控制器 ---
+
+    private class ProgressAnimator {
         private val interpolator = Interpolates.linear
         var currentWidth = 0f; private set
         var targetWidth = 0f; private set
         var hasStarted = false
         var hasFinished = false
-        val isPlaying get() = hasStarted && !hasFinished
+        var isAnimating = false; private set
 
         private var startWidth = 0f
         private var startTimeNanos = 0L
         private var durationNanos = 0L
-        private var isAnimating = false
 
         fun reset() {
             currentWidth = 0f; targetWidth = 0f; startWidth = 0f
@@ -196,7 +222,7 @@ class Syllable(private val ownerView: LyricLineView) {
             isAnimating = false
         }
 
-        fun animateTo(target: Float, durationMs: Long) {
+        fun startAnimation(target: Float, durationMs: Long) {
             startWidth = currentWidth
             targetWidth = target
             startTimeNanos = System.nanoTime()
@@ -204,7 +230,7 @@ class Syllable(private val ownerView: LyricLineView) {
             isAnimating = true
         }
 
-        fun update(now: Long): Boolean {
+        fun doStep(now: Long): Boolean {
             if (!isAnimating) return false
             val elapsed = (now - startTimeNanos).coerceAtLeast(0L)
             if (elapsed >= durationNanos) {
@@ -212,153 +238,241 @@ class Syllable(private val ownerView: LyricLineView) {
                 isAnimating = false
                 return true
             }
-            val progress = elapsed.toFloat() / durationNanos
+            val fraction = elapsed.toFloat() / durationNanos
             currentWidth =
-                startWidth + (targetWidth - startWidth) * interpolator.getInterpolation(progress)
+                startWidth + (targetWidth - startWidth) * interpolator.getInterpolation(fraction)
             return true
         }
     }
 
-    /**
-     * 处理长歌词的水平滚动计算
-     */
-    private class AutoScroller {
+    private class ScrollController {
         fun reset(view: LyricLineView) {
-            view.scrollXOffset = 0f; view.isScrollFinished = false
+            view.scrollXOffset = 0f
+            view.isScrollFinished = false
         }
 
-        @Suppress("unused")
-        fun update(currentX: Float, view: LyricLineView, smooth: Boolean) {
+        fun updateScroll(currentX: Float, view: LyricLineView) {
             if (!view.isOverflow()) {
-                view.scrollXOffset = 0f
+                if (view.scrollXOffset != 0f) view.scrollXOffset = 0f
                 return
             }
-
+            // 文本中心对齐逻辑：当进度超过 View 一半时开始滚动
             val halfWidth = view.measuredWidth / 2f
             if (currentX > halfWidth) {
                 val minScroll = -view.lyricWidth + view.measuredWidth
-                view.scrollXOffset = max(halfWidth - currentX, minScroll)
-                view.isScrollFinished = view.scrollXOffset <= minScroll
+                val targetScroll = max(halfWidth - currentX, minScroll)
+                view.scrollXOffset = targetScroll
+                view.isScrollFinished = targetScroll <= minScroll
             } else {
                 view.scrollXOffset = 0f
             }
         }
     }
 
-    /**
-     * 歌词文本渲染实现类
-     */
-    private class LineRenderer {
+    // --- 渲染实现路径 ---
 
-        class LayoutInfo {
-            var viewWidth = 0
-            var viewHeight = 0
-            var scrollX = 0f
-            var isOverflow = false
+    private interface LineRenderDelegate {
+        var isGradientEnabled: Boolean
+        var isOnlyScrollMode: Boolean
+        fun onLayoutChanged(width: Int, height: Int, overflow: Boolean)
+        fun onHighlightUpdated(highlightWidth: Float)
+        fun draw(canvas: Canvas, scrollX: Float)
+        fun notifyDirty()
+    }
 
-            fun update(viewWidth: Int, viewHeight: Int, scrollX: Float, isOverflow: Boolean) {
-                this.viewWidth = viewWidth
-                this.viewHeight = viewHeight
-                this.scrollX = scrollX
-                this.isOverflow = isOverflow
+    /** 兼容模式：传统 Canvas 直接绘制 */
+    private inner class LegacyRenderDelegate : LineRenderDelegate {
+        override var isGradientEnabled = true
+        override var isOnlyScrollMode = false
+        private var width = 0
+        private var height = 0
+        private var overflow = false
+        private var highlightWidth = 0f
+
+        override fun onLayoutChanged(width: Int, height: Int, overflow: Boolean) {
+            this.width = width; this.height = height; this.overflow = overflow
+        }
+
+        override fun onHighlightUpdated(highlightWidth: Float) {
+            this.highlightWidth = highlightWidth
+        }
+
+        override fun notifyDirty() {}
+
+        override fun draw(canvas: Canvas, scrollX: Float) {
+            sharedRenderer.executeDraw(
+                canvas,
+                view.lyricModel,
+                width,
+                height,
+                scrollX,
+                overflow,
+                highlightWidth,
+                isGradientEnabled,
+                isOnlyScrollMode,
+                inactivePaint,
+                activePaint,
+                view.textPaint
+            )
+        }
+    }
+
+    /** 高效模式：API 29+ 硬件加速 RenderNode，仅在数据变化时重录指令 */
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private inner class V29RenderDelegate : LineRenderDelegate {
+        override var isGradientEnabled = true
+        override var isOnlyScrollMode = false
+        private val renderNode by lazy { RenderNode("LyricLineNode") }
+        private var width = 0
+        private var height = 0
+        private var overflow = false
+        private var highlightWidth = 0f
+        private var isDirty = true // 脏标记，用于判断是否需要重新记录指令
+
+        override fun notifyDirty() {
+            isDirty = true
+        }
+
+        override fun onLayoutChanged(width: Int, height: Int, overflow: Boolean) {
+            if (this.width != width || this.height != height || this.overflow != overflow) {
+                this.width = width; this.height = height; this.overflow = overflow
+                renderNode.setPosition(0, 0, width, height)
+                isDirty = true
             }
         }
 
-        data class PaintContext(
-            val normal: TextPaint,
-            val inactive: TextPaint,
-            val active: TextPaint
-        )
+        override fun onHighlightUpdated(highlightWidth: Float) {
+            if (abs(this.highlightWidth - highlightWidth) > 0.1f) {
+                this.highlightWidth = highlightWidth
+                isDirty = true
+            }
+        }
 
+        override fun draw(canvas: Canvas, scrollX: Float) {
+            if (isDirty) {
+                val recordingCanvas = renderNode.beginRecording(width, height)
+                try {
+                    recordingCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                    sharedRenderer.executeDraw(
+                        recordingCanvas,
+                        view.lyricModel,
+                        width,
+                        height,
+                        scrollX,
+                        overflow,
+                        highlightWidth,
+                        isGradientEnabled,
+                        isOnlyScrollMode,
+                        inactivePaint,
+                        activePaint,
+                        view.textPaint
+                    )
+                } finally {
+                    renderNode.endRecording()
+                }
+                isDirty = false
+            }
+            canvas.drawRenderNode(renderNode)
+        }
+    }
+
+    /**
+     * 渲染逻辑核心类 - 修复描边/重影优化版
+     */
+    private class SharedLineRenderer {
+        private val fontMetrics = Paint.FontMetrics()
+        private var baselineOffset = 0f
+
+        private val shaderMatrix = Matrix()
         private val gradColors = intArrayOf(0, 0, Color.TRANSPARENT)
-        private val gradPositions = floatArrayOf(0f, 0.86f, 1f)
+        private val gradPositions = floatArrayOf(0f, 0.9f, 1f)
         private var cachedShader: LinearGradient? = null
 
-        // 用于检测是否需要刷新 Shader
-        private var lastHighlightWidth = -1f
         private var lastColor = 0
-        private var lastTextWidth = -1f
+        private var isStandardRatio = true
 
-        var enableGradient = true
-        var onlyScrollMode: Boolean = false
+        fun updateFontMetrics(paint: TextPaint) {
+            paint.getFontMetrics(fontMetrics)
+            baselineOffset = -(fontMetrics.descent + fontMetrics.ascent) / 2f
+        }
 
-        fun draw(
-            canvas: Canvas,
-            model: LyricModel,
-            layoutInfo: LayoutInfo,
-            paints: PaintContext,
-            highlightWidth: Float
+        fun clearShaderCache() {
+            cachedShader = null
+        }
+
+        fun executeDraw(
+            canvas: Canvas, model: LyricModel, viewW: Int, viewH: Int,
+            scrollX: Float, isOverflow: Boolean, highlightW: Float,
+            enableGrad: Boolean, onlyScroll: Boolean,
+            inactiveP: TextPaint, activeP: TextPaint, normalP: TextPaint
         ) {
-            val baseline = calculateBaseline(layoutInfo.viewHeight, paints.inactive)
+            val baseline = (viewH / 2f) + baselineOffset
+            val textW = model.width
 
             canvas.withSave {
-                val tx = when {
-                    layoutInfo.isOverflow -> layoutInfo.scrollX
-                    model.isAlignedRight -> -model.width + layoutInfo.viewWidth
-                    else -> 0f
-                }
+                // 处理平移
+                val tx =
+                    if (isOverflow) scrollX else if (model.isAlignedRight) viewW - textW else 0f
                 translate(tx, 0f)
 
-                if (!onlyScrollMode) {
-                    // 1. 绘制底色文字
-                    canvas.drawText(model.wordText, 0f, baseline, paints.inactive)
-
-                    // 2. 绘制高亮文字
-                    if (highlightWidth > 0f) {
-                        canvas.clipRect(0f, 0f, highlightWidth, layoutInfo.viewHeight.toFloat())
-
-                        if (enableGradient) {
-                            applyEnhancedGradient(paints.active, highlightWidth, model.width)
-                        } else {
-                            paints.active.shader = null
-                        }
-
-                        canvas.drawText(model.wordText, 0f, baseline, paints.active)
-                    }
+                if (onlyScroll) {
+                    canvas.drawText(model.wordText, 0f, baseline, normalP)
                 } else {
-                    canvas.drawText(model.wordText, 0f, baseline, paints.normal)
+                    // --- 核心修复：双重裁剪逻辑 ---
+
+                    // 1. 绘制【底色文本】(未完成部分)
+                    // 裁剪掉左侧已高亮的区域，只保留右侧
+                    canvas.withSave {
+                        if (highlightW > 0f) {
+                            // 注意：这里裁剪的是右侧剩余区域
+                            // 使用 Float.MAX_VALUE 确保覆盖所有可能的文本长度
+                            canvas.clipRect(highlightW, 0f, Float.MAX_VALUE, viewH.toFloat())
+                        }
+                        canvas.drawText(model.wordText, 0f, baseline, inactiveP)
+                    }
+
+                    // 2. 绘制【高亮文本】(已完成部分)
+                    if (highlightW > 0f) {
+                        canvas.withSave {
+                            // 裁剪左侧高亮区域
+                            canvas.clipRect(0f, 0f, highlightW, viewH.toFloat())
+
+                            if (enableGrad) {
+                                applyGradient(activeP, highlightW, textW)
+                            } else {
+                                activeP.shader = null
+                            }
+                            canvas.drawText(model.wordText, 0f, baseline, activeP)
+                        }
+                    }
                 }
             }
         }
 
-        private fun calculateBaseline(h: Int, paint: Paint): Float {
-            val fm = paint.fontMetrics
-            return (h - (fm.descent - fm.ascent)) / 2f - fm.ascent
-        }
+        private fun applyGradient(paint: Paint, highlightW: Float, textW: Float) {
+            if (textW <= 0f) return
+            val ratio = (highlightW / textW).coerceIn(0f, 1f)
+            val isStandard = ratio <= 0.90f
+            val edge = if (isStandard) 0.90f else ratio
 
-        private fun applyEnhancedGradient(paint: Paint, highlightWidth: Float, textWidth: Float) {
-            if (textWidth <= 0f) {
-                paint.shader = null
-                return
+            if (cachedShader == null || lastColor != paint.color || isStandardRatio != isStandard
+                || (!isStandard && abs(gradPositions[1] - edge) > 0.01f)
+            ) {
+                gradColors[0] = paint.color
+                gradColors[1] = paint.color
+                gradPositions[1] = edge
+                cachedShader =
+                    LinearGradient(0f, 0f, 1f, 0f, gradColors, gradPositions, Shader.TileMode.CLAMP)
+                lastColor = paint.color
+                isStandardRatio = isStandard
             }
 
-            val color = paint.color
-            val ratio = (highlightWidth / textWidth).coerceIn(0f, 1f)
-            val posEdge = ratio.coerceAtLeast(0.86f)
-
-            val needUpdate = cachedShader == null ||
-                    lastColor != color ||
-                    lastTextWidth != textWidth ||
-                    abs(lastHighlightWidth - highlightWidth) > 0.5f
-
-            if (needUpdate) {
-                gradColors[0] = color
-                gradColors[1] = color
-                gradPositions[1] = posEdge
-
-                lastColor = color
-                lastTextWidth = textWidth
-                lastHighlightWidth = highlightWidth
-
-                cachedShader = LinearGradient(
-                    0f, 0f, highlightWidth, 0f,
-                    gradColors,
-                    gradPositions,
-                    Shader.TileMode.CLAMP
-                )
-            }
-
+            shaderMatrix.setScale(highlightW, 1f)
+            cachedShader?.setLocalMatrix(shaderMatrix)
             paint.shader = cachedShader
         }
     }
+
+    private fun createRenderDelegate(): LineRenderDelegate =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) V29RenderDelegate() else LegacyRenderDelegate()
 }

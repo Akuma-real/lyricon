@@ -18,7 +18,7 @@ configure<LibraryExtension> {
     }
 
     defaultConfig {
-        minSdk = rootProject.extra.get("minSdkVersion") as Int
+        minSdk = 14
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -48,7 +48,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-val version: String = "0.1.64"
+val version: String = rootProject.extra.get("providerSdkVersion") as String
 
 mavenPublishing {
     coordinates(

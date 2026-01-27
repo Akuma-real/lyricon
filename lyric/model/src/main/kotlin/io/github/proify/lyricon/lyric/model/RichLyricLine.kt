@@ -35,7 +35,7 @@ import kotlinx.serialization.Serializable
 data class RichLyricLine(
     override var begin: Long = 0,
     override var end: Long = 0,
-    override var duration: Long = end - begin,
+    override var duration: Long = 0,
     override var isAlignedRight: Boolean = false,
     override var metadata: LyricMetadata? = null,
     override var text: String? = null,
@@ -46,6 +46,10 @@ data class RichLyricLine(
     override var translationWords: List<LyricWord>? = null,
 ) : IRichLyricLine, Parcelable, DeepCopyable<RichLyricLine>, Normalize<RichLyricLine> {
 
+    init {
+        if (duration == 0L && end > begin) duration = end - begin
+    }
+
     override fun deepCopy(): RichLyricLine = copy(
         words = words?.deepCopy(),
         secondaryWords = secondaryWords?.deepCopy(),
@@ -55,10 +59,8 @@ data class RichLyricLine(
     override fun normalize(): RichLyricLine = deepCopy().apply {
         words = words?.normalize()
         text = words.toText(text)
-
         secondaryWords = secondaryWords?.normalize()
         secondary = secondaryWords.toText(secondary)
-
         translationWords = translationWords?.normalize()
         translation = translationWords.toText(translation)
     }

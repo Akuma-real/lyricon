@@ -10,6 +10,7 @@ import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.LinearLayout
+import androidx.core.view.forEach
 import io.github.proify.lyricon.lyric.model.LyricLine
 import io.github.proify.lyricon.lyric.model.LyricWord
 import io.github.proify.lyricon.lyric.model.interfaces.ILyricTiming
@@ -25,8 +26,7 @@ class RichLyricLineView(
     var displayTranslation: Boolean = false,
     var enableRelativeProgress: Boolean = false,
     var enableRelativeProgressHighlight: Boolean = false
-) :
-    LinearLayout(context) {
+) : LinearLayout(context), UpdatableColor {
 
     companion object {
         private val EMPTY_LYRIC_LINE = LyricLine()
@@ -120,9 +120,9 @@ class RichLyricLineView(
         main.setLyric(line)
 
         if (isRelativeProgressWords) {
-            main.syllable.onlyScrollMode = !enableRelativeProgressHighlight
+            main.syllable.isOnlyScrollMode = !enableRelativeProgressHighlight
         } else {
-            main.syllable.onlyScrollMode = false
+            main.syllable.isOnlyScrollMode = false
         }
     }
 
@@ -175,11 +175,11 @@ class RichLyricLineView(
             line.words?.isEmpty() == true -> true //MarqueeMode
             line.metadata?.getBoolean("translation") == true -> true
             else -> false
-        } && (line.text?.isNotEmpty() == true || line.words?.isNotEmpty() == true)
+        } && (line.text?.isNotBlank() == true || line.words?.isNotEmpty() == true)
 
         secondary.setLyric(line)
 
-        secondary.syllable.onlyScrollMode =
+        secondary.syllable.isOnlyScrollMode =
             isGenerated && !enableRelativeProgressHighlight
     }
 
@@ -193,13 +193,15 @@ class RichLyricLineView(
         secondary.setPosition(position)
     }
 
-    fun updateColor(
-        textColor: Int,
+    override fun updateColor(
+        primaryColor: Int,
         backgroundColor: Int,
         highlightColor: Int
     ) {
-        main.updateColor(textColor, backgroundColor, highlightColor)
-        secondary.updateColor(textColor, backgroundColor, highlightColor)
+        forEach {
+            if (it is UpdatableColor)
+                it.updateColor(primaryColor, backgroundColor, highlightColor)
+        }
     }
 
     fun setStyle(config: RichLyricLineConfig) {
@@ -272,5 +274,4 @@ class RichLyricLineView(
             secondary.startMarquee()
         }
     }
-
 }

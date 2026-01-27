@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @property logo 播放器 Logo，可为空
  * @property metadata 提供者元数据，可为空
  * @property providerService 本地服务实例，可为空
- * @property centralPackageNames 中心服务包名列表
+ * @property centralPackageName 中心服务包名
  */
 class LyriconProvider(
     context: Context,
@@ -51,7 +51,14 @@ class LyriconProvider(
     logo: ProviderLogo? = null,
     metadata: ProviderMetadata? = null,
     providerService: ProviderService? = null,
-    var centralPackageNames: List<String> = listOf(ProviderConstants.SYSTEM_UI_PACKAGE_NAME)
+
+    var centralPackageName: String = ProviderConstants.SYSTEM_UI_PACKAGE_NAME,
+    @Deprecated(
+        message = "不再支持多个包名，请使用 centralPackageName",
+        replaceWith = ReplaceWith("centralPackageName"),
+        level = DeprecationLevel.WARNING
+    )
+    var centralPackageNames: List<String> = emptyList()
 ) {
 
     private companion object {
@@ -114,12 +121,20 @@ class LyriconProvider(
      */
     var autoSync: Boolean = true
 
+    private var internalConnectionListener: ConnectionListener? = null
+
     init {
+        @Suppress("DEPRECATION")
+        if (centralPackageNames.isNotEmpty()) {
+            centralPackageName = centralPackageNames.first()
+        }
+
         CentralServiceReceiver.initialize(appContext)
         CentralServiceReceiver.addServiceListener(centralServiceListener)
 
-        service.addConnectionListener {
+        internalConnectionListener = service.addConnectionListener {
             fun handleConnected() {
+                if (destroyed.get()) return
                 val player = this@LyriconProvider.player
                 if (autoSync && player is CachedRemotePlayer) {
                     player.syncs()
@@ -191,11 +206,11 @@ class LyriconProvider(
 
         binder.addRegistrationCallback(registrationCallback)
 
-        centralPackageNames.forEach { centralPackageName ->
-            val bundle = Bundle().apply {
-                putBinder(ProviderConstants.EXTRA_BINDER, binder)
-            }
+        val bundle = Bundle().apply {
+            putBinder(ProviderConstants.EXTRA_BINDER, binder)
+        }
 
+        if (!centralPackageName.isBlank()) {
             val intent = Intent(ProviderConstants.ACTION_REGISTER_PROVIDER).apply {
                 setPackage(centralPackageName)
                 putExtra(ProviderConstants.EXTRA_BUNDLE, bundle)
@@ -238,6 +253,8 @@ class LyriconProvider(
 
         scope.cancel()
         unregisterByUser()
+        internalConnectionListener?.let { service.removeConnectionListener(it) }
+
         CentralServiceReceiver.removeServiceListener(centralServiceListener)
     }
 }

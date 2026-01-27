@@ -8,7 +8,7 @@ plugins {
     id("com.vanniktech.maven.publish")
 }
 
-val version: String = "0.1.64"
+val version: String = rootProject.extra.get("providerSdkVersion") as String
 
 configure<LibraryExtension> {
     namespace = "io.github.proify.lyricon.provider"
@@ -19,7 +19,7 @@ configure<LibraryExtension> {
     }
 
     defaultConfig {
-        minSdk = rootProject.extra.get("minSdkVersion") as Int
+        minSdk = 18
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

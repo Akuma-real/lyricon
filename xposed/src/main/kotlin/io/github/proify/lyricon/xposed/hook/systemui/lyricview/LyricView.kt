@@ -6,7 +6,7 @@
 
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package io.github.proify.lyricon.xposed.lyricview
+package io.github.proify.lyricon.xposed.hook.systemui.lyricview
 
 import android.animation.LayoutTransition
 import android.annotation.SuppressLint
@@ -18,8 +18,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.children
 import androidx.core.view.contains
+import androidx.core.view.forEach
 import androidx.core.view.isNotEmpty
 import androidx.core.view.updatePadding
 import io.github.proify.android.extensions.dp
@@ -232,8 +232,8 @@ class LyricView(
 
     override fun onColorChanged(colorInfo: StatusBarColor) {
         currentStatusColor = colorInfo
-        children.forEach { child ->
-            (child as? StatusBarColorMonitor.OnColorChangeListener)?.onColorChanged(colorInfo)
+        forEach {
+            if (it is StatusBarColorMonitor.OnColorChangeListener) it.onColorChanged(colorInfo)
         }
     }
 

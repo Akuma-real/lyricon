@@ -38,6 +38,10 @@ data class LyricLine(
     override var words: List<LyricWord>? = null,
 ) : ILyricLine, Parcelable, DeepCopyable<LyricLine>, Normalize<LyricLine> {
 
+    init {
+        if (duration == 0L && end > begin) duration = end - begin
+    }
+
     override fun deepCopy(): LyricLine = copy(
         words = words?.deepCopy()
     )

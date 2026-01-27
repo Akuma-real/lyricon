@@ -22,10 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -50,8 +47,6 @@ internal class RemotePlayer(
     private var positionReadBuffer: ByteBuffer? = null
     private val scope = CoroutineScope(SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
     private var positionProducerJob: Job? = null
-    private var positionConsumerJob: Job? = null
-    private val positionChannel = Channel<Long>(Channel.CONFLATED)
 
     @Volatile
     private var positionUpdateInterval: Long = ProviderConstants.DEFAULT_POSITION_UPDATE_INTERVAL
@@ -73,7 +68,6 @@ internal class RemotePlayer(
         positionSharedMemory?.close()
         positionSharedMemory = null
 
-        positionChannel.close()
         scope.cancel()
     }
 
@@ -114,21 +108,13 @@ internal class RemotePlayer(
             while (isActive) {
                 val position = readPosition()
                 recorder.lastPosition = position
-                positionChannel.trySend(position)
+                try {
+                    playerListener.onPositionChanged(recorder, position)
+                } catch (t: Throwable) {
+                    Log.e(TAG, "Error notifying position listener", t)
+                }
                 delay(positionUpdateInterval)
             }
-        }
-
-        positionConsumerJob = scope.launch {
-            positionChannel
-                .receiveAsFlow()
-                .collectLatest { position ->
-                    try {
-                        playerListener.onPositionChanged(recorder, position)
-                    } catch (t: Throwable) {
-                        Log.e(TAG, "Error notifying position listener", t)
-                    }
-                }
         }
     }
 
@@ -136,10 +122,6 @@ internal class RemotePlayer(
     private fun stopPositionUpdate() {
         positionProducerJob?.cancel()
         positionProducerJob = null
-
-        positionConsumerJob?.cancel()
-        positionConsumerJob = null
-
         Log.d(TAG, "Stop position updater")
     }
 

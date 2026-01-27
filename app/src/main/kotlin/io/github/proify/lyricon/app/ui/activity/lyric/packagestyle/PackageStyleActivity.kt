@@ -52,7 +52,7 @@ import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.page.LogoPage
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.page.TextPage
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.sheet.AppCache
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.sheet.PackageSwitchBottomSheet
-import io.github.proify.lyricon.app.updateLyricStyle
+import io.github.proify.lyricon.app.updateRemoteLyricStyle
 import io.github.proify.lyricon.app.util.LyricPrefs
 import io.github.proify.lyricon.app.util.editCommit
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -173,7 +173,7 @@ class PackageStyleActivity : BaseLyricActivity() {
         PackageStyleViewModelFactory(
             context = this,
             onLyricStyleUpdate = {
-                updateLyricStyle()
+                updateRemoteLyricStyle()
             },
         )
     }

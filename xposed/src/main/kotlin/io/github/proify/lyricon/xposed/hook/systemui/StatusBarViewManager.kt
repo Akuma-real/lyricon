@@ -22,7 +22,7 @@ import io.github.proify.lyricon.common.util.ResourceMapper
 import io.github.proify.lyricon.common.util.ScreenStateMonitor
 import io.github.proify.lyricon.lyric.style.BasicStyle
 import io.github.proify.lyricon.lyric.style.LyricStyle
-import io.github.proify.lyricon.xposed.lyricview.LyricView
+import io.github.proify.lyricon.xposed.hook.systemui.lyricview.LyricView
 import io.github.proify.lyricon.xposed.util.StatusBarColorMonitor
 import io.github.proify.lyricon.xposed.util.ViewVisibilityController
 

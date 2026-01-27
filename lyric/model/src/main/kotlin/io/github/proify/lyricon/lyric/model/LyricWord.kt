@@ -26,10 +26,14 @@ import kotlinx.serialization.Serializable
 data class LyricWord(
     override var begin: Long = 0,
     override var end: Long = 0,
-    override var duration: Long = end - begin,
+    override var duration: Long = 0,
     override var text: String? = null,
     override var metadata: LyricMetadata? = null,
 ) : ILyricWord, Parcelable, DeepCopyable<LyricWord> {
+
+    init {
+        if (duration == 0L && end > begin) duration = end - begin
+    }
 
     override fun deepCopy(): LyricWord = copy()
 }

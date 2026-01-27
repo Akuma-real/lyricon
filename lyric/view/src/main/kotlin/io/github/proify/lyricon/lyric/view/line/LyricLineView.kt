@@ -12,10 +12,12 @@ import android.content.Context
 import android.graphics.Canvas
 import android.text.TextPaint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.Choreographer
 import android.view.View
 import io.github.proify.lyricon.lyric.model.LyricLine
 import io.github.proify.lyricon.lyric.view.LyricLineConfig
+import io.github.proify.lyricon.lyric.view.UpdatableColor
 import io.github.proify.lyricon.lyric.view.line.model.LyricModel
 import io.github.proify.lyricon.lyric.view.line.model.createModel
 import io.github.proify.lyricon.lyric.view.line.model.emptyLyricModel
@@ -24,7 +26,12 @@ import io.github.proify.lyricon.lyric.view.util.sp
 import java.lang.ref.WeakReference
 
 class LyricLineView(context: Context, attrs: AttributeSet? = null) :
-    View(context, attrs) {
+    View(context, attrs), UpdatableColor {
+
+    companion object {
+        private const val TAG = "LyricLineView"
+        private const val DEBUG = false
+    }
 
     init {
         isHorizontalFadingEdgeEnabled = true
@@ -62,34 +69,29 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
 
     fun setTextSize(size: Float) {
         val needUpdate = textPaint.textSize != size
-                || syllable.inactivePaint.textSize != size
-                || syllable.activePaint.textSize != size
+                || syllable.textSize != size
 
         if (!needUpdate) return
 
         textPaint.textSize = size
+        syllable.setTextSize(size)
 
-        syllable.inactivePaint.textSize = size
-        syllable.activePaint.textSize = size
         refreshModelSizes()
         invalidate()
     }
 
-    fun updateColor(
-        textColor: Int,
+    override fun updateColor(
+        primaryColor: Int,
         backgroundColor: Int,
         highlightColor: Int
     ) {
         textPaint.apply {
-            color = textColor
+            color = primaryColor
         }
-        syllable.inactivePaint.apply {
-            color = backgroundColor
-        }
-        syllable.activePaint.apply {
-            color = highlightColor
-        }
+        syllable.setColor(backgroundColor, highlightColor)
         invalidate()
+
+        if (DEBUG) Log.d(TAG, "updateColor: $primaryColor, $backgroundColor, $highlightColor")
     }
 
     fun setStyle(configs: LyricLineConfig) {
@@ -103,17 +105,14 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
             color = textConfig.textColor
         }
 
-        syllable.inactivePaint.apply {
-            textSize = textConfig.textSize
-            typeface = textConfig.typeface
-            color = syllableConfig.backgroundColor
-        }
-        syllable.activePaint.apply {
-            textSize = textConfig.textSize
-            typeface = textConfig.typeface
-            color = syllableConfig.highlightColor
-        }
-        syllable.enableGradient = configs.gradientProgressStyle
+        syllable.setColor(
+            backgroundColor = syllableConfig.backgroundColor,
+            highlightColor = syllableConfig.highlightColor
+        )
+        syllable.setTextSize(textConfig.textSize)
+        syllable.setTypeface(textConfig.typeface)
+
+        syllable.isGradientEnabled = configs.gradientProgressStyle
 
         marquee.apply {
             ghostSpacing = marqueeConfig.ghostSpacing
@@ -124,7 +123,6 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
             stopAtEnd = marqueeConfig.stopAtEnd
         }
         refreshModelSizes()
-
         invalidate()
     }
 
@@ -243,7 +241,6 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
     fun isOverflow(): Boolean = lyricWidth > width
 
     override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
         if (isMarqueeMode()) {
             marquee.draw(canvas)
         } else {
@@ -256,9 +253,9 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
         reset()
     }
 
-    fun isPlayStarted(): Boolean = if (isMarqueeMode()) true else syllable.isPlayStarted()
-    fun isPlaying(): Boolean = if (isMarqueeMode()) true else syllable.isPlaying()
-    fun isPlayFinished(): Boolean = if (isMarqueeMode()) false else syllable.isPlayFinished()
+    fun isPlayStarted(): Boolean = if (isMarqueeMode()) true else syllable.isStarted
+    fun isPlaying(): Boolean = if (isMarqueeMode()) true else syllable.isPlaying
+    fun isPlayFinished(): Boolean = if (isMarqueeMode()) false else syllable.isFinished
 
     /**
      * ------------------------
@@ -289,19 +286,13 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
             val deltaNanos = if (lastFrameNanos == 0L) 0L else (frameTimeNanos - lastFrameNanos)
             lastFrameNanos = frameTimeNanos
 
-            var needInvalidate: Boolean
-
-            if (isMarqueeMode()) {
-                // 驱动 Marquee（被动 step，保留完整行为）
-                marquee.step(deltaNanos)
-                needInvalidate = true
+            val changed = if (isMarqueeMode()) {
+                marquee.step(deltaNanos); true
             } else {
-                // 非跑马灯：推进高亮 & 字偏移
-                val changed = syllable.updateFrame(frameTimeNanos)
-                needInvalidate = changed
+                syllable.onFrameUpdate(frameTimeNanos)
             }
 
-            if (needInvalidate) postInvalidateOnAnimation()
+            if (changed) postInvalidateOnAnimation()
 
             if (running) Choreographer.getInstance().postFrameCallback(this)
         }

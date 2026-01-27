@@ -50,6 +50,13 @@ internal class CachedRemotePlayer(
     var lastDisplayTranslation: Boolean? = null
         private set
 
+    @Volatile
+    private var lastLyricType = LastLyricType.NONE
+
+    private enum class LastLyricType {
+        SONG, TEXT, NONE
+    }
+
     /**
      * 根据当前缓存的状态同步至 [player]。
      * 优化点：采用局部变量快照防止同步期状态被并行修改。
@@ -60,7 +67,7 @@ internal class CachedRemotePlayer(
         player.setPlaybackState(lastPlaybackState)
 
         val interval = lastPositionUpdateInterval
-        if (interval != -1) {
+        if (interval >= 0) {
             player.setPositionUpdateInterval(interval)
         }
 
@@ -69,16 +76,15 @@ internal class CachedRemotePlayer(
         }
 
         // 2. 同步内容
-        val currentSong = lastSong
-        if (currentSong != null) {
-            player.setSong(currentSong)
-        } else {
+        if (lastLyricType == LastLyricType.SONG) {
+            player.setSong(lastSong)
+        } else if (lastLyricType == LastLyricType.TEXT) {
             player.sendText(lastText)
         }
 
         // 3. 最后同步进度，确保内容加载后定位准确
         val pos = lastPosition
-        if (pos != -1L) {
+        if (pos >= 0) {
             player.seekTo(pos)
         }
     }
@@ -87,6 +93,7 @@ internal class CachedRemotePlayer(
         get() = player.isActivated
 
     override fun setSong(song: Song?): Boolean {
+        lastLyricType = LastLyricType.SONG
         lastSong = song
         return player.setSong(song)
     }
@@ -112,6 +119,7 @@ internal class CachedRemotePlayer(
     }
 
     override fun sendText(text: String?): Boolean {
+        lastLyricType = LastLyricType.TEXT
         lastText = text
         return player.sendText(text)
     }

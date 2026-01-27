@@ -36,7 +36,7 @@ import io.github.proify.lyricon.app.bridge.AppBridgeConstants
 import io.github.proify.lyricon.app.compose.custom.bonsai.core.node.Node
 import io.github.proify.lyricon.app.compose.custom.miuix.basic.Card
 import io.github.proify.lyricon.app.compose.custom.miuix.extra.SuperCheckbox
-import io.github.proify.lyricon.app.updateLyricStyle
+import io.github.proify.lyricon.app.updateRemoteLyricStyle
 import io.github.proify.lyricon.app.util.LyricPrefs
 import io.github.proify.lyricon.common.util.ViewTreeNode
 import io.github.proify.lyricon.lyric.style.VisibilityRule
@@ -128,7 +128,7 @@ class ViewRulesTreeActivity : ViewTreeActivity() {
             }
 
             LyricPrefs.setViewVisibilityRule(rules)
-            updateLyricStyle()
+            updateRemoteLyricStyle()
             _currentMode.intValue = newMode
             showOptions.value = false
         }

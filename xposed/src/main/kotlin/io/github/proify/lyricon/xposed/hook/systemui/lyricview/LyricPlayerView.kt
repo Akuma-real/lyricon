@@ -4,15 +4,15 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-package io.github.proify.lyricon.xposed.lyricview
+package io.github.proify.lyricon.xposed.hook.systemui.lyricview
 
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.util.Log
 import android.widget.TextView
 import androidx.core.view.updatePadding
 import io.github.proify.android.extensions.dp
-import io.github.proify.android.extensions.setColorAlpha
 import io.github.proify.android.extensions.sp
 import io.github.proify.lyricon.lyric.style.LyricStyle
 import io.github.proify.lyricon.lyric.style.TextStyle
@@ -28,6 +28,8 @@ class LyricPlayerView(context: Context) : LyricPlayerView(context),
     StatusBarColorMonitor.OnColorChangeListener {
 
     companion object {
+        private const val TAG = "LyricPlayerView"
+        private const val DEBUG = true
         const val VIEW_TAG: String = "lyricon:text_view"
         private const val FONT_WEIGHT_MAX: Int = 1000
     }
@@ -110,6 +112,10 @@ class LyricPlayerView(context: Context) : LyricPlayerView(context),
             syllableConfig.backgroundColor,
             syllableConfig.highlightColor
         )
+
+        if (DEBUG) {
+            Log.d(TAG, "Updating colors: $primaryColor")
+        }
     }
 
     private fun updateViewLayout(textStyle: TextStyle) {
@@ -149,21 +155,22 @@ class LyricPlayerView(context: Context) : LyricPlayerView(context),
         stopAtEnd = textStyle.marqueeStopAtEnd
     }
 
-    private fun buildSyllableConfig(textStyle: TextStyle) = DefaultSyllableConfig().apply {
-        val customColor = textStyle.color(currentStatusColor.lightMode)
-        val isCustomEnabled = textStyle.enableCustomTextColor && customColor != null
+    private val defaultSyllableConfigCache = DefaultSyllableConfig()
+    private fun buildSyllableConfig(textStyle: TextStyle) =
+        defaultSyllableConfigCache.apply {
+            val customColor = textStyle.color(currentStatusColor.lightMode)
+            val isCustomEnabled = textStyle.enableCustomTextColor && customColor != null
 
-        backgroundColor = when {
-            isCustomEnabled && customColor.background != 0 -> customColor.background
-            else -> currentStatusColor.color.setColorAlpha(0.5f)
+            backgroundColor = when {
+                isCustomEnabled && customColor.background != 0 -> customColor.background
+                else -> currentStatusColor.translucentColor
+            }
+
+            highlightColor = when {
+                isCustomEnabled && customColor.highlight != 0 -> customColor.highlight
+                else -> currentStatusColor.color
+            }
         }
-
-        highlightColor = when {
-            isCustomEnabled && customColor.highlight != 0 -> customColor.highlight
-            else -> currentStatusColor.color
-        }
-
-    }
 
     private fun resolvePrimaryColor(textStyle: TextStyle): Int {
         val customColor = textStyle.color(currentStatusColor.lightMode)

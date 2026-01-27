@@ -52,7 +52,7 @@ interface RemotePlayer {
     fun seekTo(@IntRange(from = 0) position: Long): Boolean
 
     /**
-     * 将播放位置写入到远程播放器共享区域，用于轮询同步。
+     * 更新播放位置到待读取区
      *
      * @param position 播放位置，最小值为 0
      * @see setPositionUpdateInterval
@@ -60,9 +60,9 @@ interface RemotePlayer {
     fun setPosition(@IntRange(from = 0) position: Long): Boolean
 
     /**
-     * 设置播放位置轮询间隔，用于共享内存同步机制。
+     * 设置播放位置读取间隔
      *
-     * @param interval 间隔毫秒数，最小值为 0
+     * @param interval 间隔毫秒数
      * @return 操作是否成功
      */
     fun setPositionUpdateInterval(@IntRange(from = 0) interval: Int): Boolean

@@ -51,7 +51,7 @@ fun Int.isDarkAgainst(
  * @param alpha 透明度比例 (0.0 - 1.0)。
  */
 @ColorInt
-fun Int.setColorAlpha(@FloatRange(from = 0.0, to = 1.0) alpha: Float): Int {
+fun @receiver:ColorInt Int.setColorAlpha(@FloatRange(from = 0.0, to = 1.0) alpha: Float): Int {
     val alphaInt = (alpha.coerceIn(0f, 1f) * 255f + 0.5f).toInt()
     return ColorUtils.setAlphaComponent(this, alphaInt)
 }

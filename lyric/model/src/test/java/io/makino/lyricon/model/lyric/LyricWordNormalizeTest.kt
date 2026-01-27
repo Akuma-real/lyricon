@@ -1,3 +1,9 @@
+/*
+ * Copyright 2026 Proify, Tomakino
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 @file:Suppress("ReplacePrintlnWithLogging")
 
 package io.makino.lyricon.model.lyric
@@ -67,10 +73,22 @@ class LyricWordNormalizeTest {
         assertEquals(2, result.size)
     }
 
+    @Test
+    fun test4() {
+        val words = listOf(
+            createWord(begin = 0, end = 10, text = "a"),
+            createWord(begin = 10, end = 20, text = "&"),
+            createWord(begin = 30, end = 40, text = " "),
+        )
+        val result = words.normalize()
+        println("test3 Result: size: ${result.size}, text: $result")
+
+    }
+
     private fun createWord(
         begin: Long,
         end: Long,
-        duration: Long,
+        duration: Long = end - begin,
         text: String?
     ): LyricWord {
         return LyricWord().apply {
