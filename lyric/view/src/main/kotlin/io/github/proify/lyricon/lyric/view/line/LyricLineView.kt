@@ -38,7 +38,7 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
         setFadingEdgeLength(14.dp)
     }
 
-    val textPaint: TextPaint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply {
+    val textPaint: TextPaint = TextPaintX().apply {
         textSize = 24f.sp
     }
 
@@ -106,8 +106,8 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
         }
 
         syllable.setColor(
-            backgroundColor = syllableConfig.backgroundColor,
-            highlightColor = syllableConfig.highlightColor
+            background = syllableConfig.backgroundColor,
+            highlight = syllableConfig.highlightColor
         )
         syllable.setTextSize(textConfig.textSize)
         syllable.setTypeface(textConfig.typeface)
@@ -238,7 +238,7 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
     }
 
     fun isMarqueeMode(): Boolean = lyricModel.isPlainText
-    fun isOverflow(): Boolean = lyricWidth > width
+    fun isOverflow(): Boolean = lyricWidth > measuredWidth
 
     override fun onDraw(canvas: Canvas) {
         if (isMarqueeMode()) {
