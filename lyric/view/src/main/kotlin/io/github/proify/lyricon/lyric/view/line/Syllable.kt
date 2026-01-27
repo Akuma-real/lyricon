@@ -340,11 +340,12 @@ class Syllable(private val view: LyricLineView) {
     }
 
     private class LineTextRenderer {
+        private val minEdgePosition = 0.9f
         private val fontMetrics = Paint.FontMetrics()
         private var baselineOffset = 0f
         private val shaderMatrix = Matrix()
         private val shaderColors = intArrayOf(0, 0, 0)
-        private val shaderPositions = floatArrayOf(0f, 0.86f, 1f)
+        private val shaderPositions = floatArrayOf(0f, minEdgePosition, 1f)
         private var cachedShader: LinearGradient? = null
         private var lastPaintColor = 0
         private var isStandardRatio = true
@@ -409,8 +410,8 @@ class Syllable(private val view: LyricLineView) {
         private fun applyHighlightShader(paint: Paint, highlightWidth: Float, totalWidth: Float) {
             if (totalWidth <= 0f) return
             val ratio = (highlightWidth / totalWidth).coerceIn(0f, 1f)
-            val isStd = ratio <= 0.86f
-            val edgePosition = if (isStd) 0.86f else ratio
+            val isStd = ratio <= minEdgePosition
+            val edgePosition = if (isStd) minEdgePosition else ratio
 
             val needsNewShader = cachedShader == null ||
                     lastPaintColor != paint.color ||

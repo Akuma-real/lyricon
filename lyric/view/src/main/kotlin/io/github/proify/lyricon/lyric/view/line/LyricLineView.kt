@@ -106,8 +106,8 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
         }
 
         syllable.setColor(
-            background = syllableConfig.backgroundColor,
-            highlight = syllableConfig.highlightColor
+            syllableConfig.backgroundColor,
+            syllableConfig.highlightColor
         )
         syllable.setTextSize(textConfig.textSize)
         syllable.setTypeface(textConfig.typeface)
