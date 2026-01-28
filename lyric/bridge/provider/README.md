@@ -65,7 +65,7 @@ implementation("io.github.proify.lyricon:provider:0.1.64")
 ## 三、创建 `LyriconProvider`
 
 ```kotlin
-val provider = LyriconProvider(
+val provider = LyriconFactory.createProvider(
     context,
 
     //建议使用纯色图标
