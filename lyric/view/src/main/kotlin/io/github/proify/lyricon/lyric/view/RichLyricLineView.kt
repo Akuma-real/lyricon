@@ -8,9 +8,9 @@
 
 package io.github.proify.lyricon.lyric.view
 
-import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.Context
+import android.view.Gravity
 import android.widget.LinearLayout
 import androidx.core.view.forEach
 import io.github.proify.lyricon.lyric.model.LyricLine
@@ -22,6 +22,9 @@ import io.github.proify.lyricon.lyric.view.line.LyricLineView
 import io.github.proify.lyricon.lyric.view.util.LayoutTransitionX
 import io.github.proify.lyricon.lyric.view.util.visible
 
+/**
+ * 富文本歌词行视图，支持主标题、副标题/翻译。
+ */
 @SuppressLint("ViewConstructor")
 class RichLyricLineView(
     context: Context,
@@ -34,157 +37,47 @@ class RichLyricLineView(
         private val EMPTY_LYRIC_LINE = LyricLine()
     }
 
-    val customLayoutTransition: LayoutTransition = LayoutTransitionX().apply {
-    }
+    // --- 视图持有者 ---
+    val main = LyricLineView(context)
+    val secondary = LyricLineView(context).apply { visible = false }
 
-    init {
-        layoutTransition = customLayoutTransition
+    private fun updateLayoutTransitionX(config: String? = LayoutTransitionX.TRANSITION_CONFIG_SMOOTH) {
+        val layoutTransitionX = LayoutTransitionX(config)
+        layoutTransition = layoutTransitionX
     }
 
     var line: IRichLyricLine? = null
         set(value) {
             field = value
-            setMainLine(value)
-            setSecondaryLine(value)
+            updateAllLines()
         }
-
-    val main: LyricLineView =
-        LyricLineView(context)
-
-    val secondary: LyricLineView =
-        LyricLineView(context).apply {
-            visible = false
-        }
-
-    fun notifyLineChanged() {
-        setMainLine(line)
-        setSecondaryLine(line)
-    }
 
     init {
         orientation = VERTICAL
+        gravity = Gravity.START or Gravity.CENTER_VERTICAL
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
         addView(main, lp)
         addView(secondary, lp)
+        updateLayoutTransitionX()
     }
 
-    fun calculateRelativeProgressWords(
-        timing: ILyricTiming,
-        text: String?,
-        words: List<LyricWord>?,
-    ): List<LyricWord>? {
-        return if (words.isNullOrEmpty()
-            && !text.isNullOrBlank()
-            && (timing.begin >= 0 && timing.end > 0 && timing.begin < timing.end)
-        ) {
-            listOf(
-                LyricWord(
-                    text = text,
-                    begin = timing.begin,
-                    end = timing.end,
-                    duration = timing.end - timing.begin
-                )
-            )
-        } else {
-            words
+    fun setTransitionConfig(config: String?) {
+        updateLayoutTransitionX(config)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        pivotY = h / 2f
+        pivotX = 0f
+
+        (parent as? LyricPlayerView)?.post {
+            (parent as? LyricPlayerView)?.updateViewsVisibility()
         }
     }
 
-    private fun setMainLine(source: IRichLyricLine?) {
-        var isRelativeProgressWords = false
+    // --- 公开 API ---
 
-        val line = if (source == null) {
-            EMPTY_LYRIC_LINE
-        } else {
-            val words = if (enableRelativeProgress && !source.isTitleLine()) {
-                calculateRelativeProgressWords(
-                    source,
-                    source.text,
-                    source.words
-                )
-            } else {
-                source.words
-            }
-            if (words != source.words) {
-                isRelativeProgressWords = true
-            }
-
-            LyricLine(
-                begin = source.begin,
-                end = source.end,
-                duration = source.duration,
-                isAlignedRight = source.isAlignedRight,
-                metadata = source.metadata,
-                text = source.text,
-                words = words,
-            )
-        }
-
-        main.setLyric(line)
-
-        if (isRelativeProgressWords) {
-            main.syllable.isOnlyScrollMode = !enableRelativeProgressHighlight
-        } else {
-            main.syllable.isOnlyScrollMode = false
-        }
-    }
-
-    fun setMainLyricPlayListener(listener: LyricPlayListener?) {
-        main.syllable.playListener = listener
-    }
-
-    fun setSecondaryLyricPlayListener(listener: LyricPlayListener?) {
-        secondary.syllable.playListener = listener
-    }
-
-    private fun setSecondaryLine(source: IRichLyricLine?) {
-        if (source == null) {
-            secondary.setLyric(null)
-            secondary.visible = false
-            return
-        }
-
-        var isGenerated = false
-        val line = LyricLine().apply {
-            begin = source.begin
-            end = source.end
-            isAlignedRight = source.isAlignedRight
-
-            when {
-                !source.secondary.isNullOrBlank() || !source.secondaryWords.isNullOrEmpty() -> {
-                    text = source.secondary
-                    words = calculateRelativeProgressWords(
-                        source,
-                        source.secondary,
-                        source.secondaryWords
-                    )
-                    isGenerated = this.words !== source.secondaryWords
-                }
-
-                displayTranslation && (!source.translation.isNullOrBlank() || !source.translationWords.isNullOrEmpty()) -> {
-                    text = source.translation
-                    words = calculateRelativeProgressWords(
-                        source,
-                        source.translation,
-                        source.translationWords
-                    )
-                    metadata = lyricMetadataOf("translation" to "true")
-                    isGenerated = this.words !== source.translationWords
-                }
-            }
-        }
-
-        secondary.visible = when {
-            line.words?.isEmpty() == true -> true //MarqueeMode
-            line.metadata?.getBoolean("translation") == true -> true
-            else -> false
-        } && (line.text?.isNotBlank() == true || line.words?.isNotEmpty() == true)
-
-        secondary.setLyric(line)
-
-        secondary.syllable.isOnlyScrollMode =
-            isGenerated && !enableRelativeProgressHighlight
-    }
+    fun notifyLineChanged() = updateAllLines()
 
     fun seekTo(position: Long) {
         main.seekTo(position)
@@ -196,25 +89,18 @@ class RichLyricLineView(
         secondary.setPosition(position)
     }
 
-    override fun updateColor(
-        primaryColor: Int,
-        backgroundColor: Int,
-        highlightColor: Int
-    ) {
-        forEach {
-            if (it is UpdatableColor)
-                it.updateColor(primaryColor, backgroundColor, highlightColor)
-        }
+    fun tryStartMarquee() {
+        if (main.isMarqueeMode()) main.startMarquee()
+        if (secondary.isMarqueeMode()) secondary.startMarquee()
+    }
+
+    fun reLayout() {
+        main.reLayout()
+        secondary.reLayout()
     }
 
     fun setStyle(config: RichLyricLineConfig) {
-        setMainStyle(
-            config.primary,
-            config.marquee,
-            config.syllable,
-            config.gradientProgressStyle
-        )
-
+        setMainStyle(config.primary, config.marquee, config.syllable, config.gradientProgressStyle)
         setSecondaryStyle(
             config.secondary,
             config.marquee,
@@ -223,63 +109,142 @@ class RichLyricLineView(
         )
     }
 
-    private fun setMainStyle(
-        config: MainTextConfig,
-        marqueeConfig: MarqueeConfig,
-        syllableConfig: SyllableConfig,
-        gradientProgressStyle: Boolean
-    ) {
-        var notifyLineChanged = false
+    override fun updateColor(primary: Int, background: Int, highlight: Int) {
+        forEach { if (it is UpdatableColor) it.updateColor(primary, background, highlight) }
+    }
 
-        if (config.enableRelativeProgress != enableRelativeProgress) {
-            enableRelativeProgress = config.enableRelativeProgress
-            notifyLineChanged = true
+    fun setMainLyricPlayListener(listener: LyricPlayListener?) {
+        main.syllable.playListener = listener
+    }
+
+    fun setSecondaryLyricPlayListener(listener: LyricPlayListener?) {
+        secondary.syllable.playListener = listener
+    }
+
+    // --- 内部逻辑处理 ---
+
+    private fun updateAllLines() {
+        setMainLine(line)
+        setSecondaryLine(line)
+    }
+
+    private fun setMainLine(source: IRichLyricLine?) {
+        if (source == null) {
+            main.setLyric(EMPTY_LYRIC_LINE)
+            return
         }
 
-        if (enableRelativeProgressHighlight != config.enableRelativeProgressHighlight) {
-            enableRelativeProgressHighlight = config.enableRelativeProgressHighlight
-            notifyLineChanged = true
-        }
+        // 仅在启用相对进度且非标题行时，尝试为整行生成一个虚拟的 Word 节点
+        val shouldGenerate = enableRelativeProgress && !source.isTitleLine()
+        val processedWords = if (shouldGenerate) {
+            calculateRelativeProgressWords(source, source.text, source.words)
+        } else source.words
 
-        val lineConfig = LyricLineConfig(
-            config,
-            marqueeConfig,
-            syllableConfig,
-            gradientProgressStyle
+        val isGenerated = processedWords !== source.words
+
+        main.setLyric(
+            LyricLine(
+                begin = source.begin,
+                end = source.end,
+                duration = source.duration,
+                isAlignedRight = source.isAlignedRight,
+                metadata = source.metadata,
+                text = source.text,
+                words = processedWords
+            )
         )
-        main.setStyle(lineConfig)
 
-        if (notifyLineChanged) {
-            notifyLineChanged()
+        // 如果是生成的 Word，根据配置决定是否显示逐字高亮效果
+        main.syllable.isOnlyScrollMode = isGenerated && !enableRelativeProgressHighlight
+    }
+
+    private fun setSecondaryLine(source: IRichLyricLine?) {
+        if (source == null) {
+            secondary.apply { setLyric(null); visible = false }
+            return
         }
+
+        var isGenerated = false
+        val newLine = LyricLine().apply {
+            begin = source.begin
+            end = source.end
+            isAlignedRight = source.isAlignedRight
+
+            when {
+                // 1. 优先展示副行歌词
+                !source.secondary.isNullOrBlank() || !source.secondaryWords.isNullOrEmpty() -> {
+                    text = source.secondary
+                    words = calculateRelativeProgressWords(
+                        source,
+                        source.secondary,
+                        source.secondaryWords
+                    )
+                    isGenerated = words !== source.secondaryWords
+                }
+                // 2. 其次展示翻译
+                displayTranslation && (!source.translation.isNullOrBlank() || !source.translationWords.isNullOrEmpty()) -> {
+                    text = source.translation
+                    words = calculateRelativeProgressWords(
+                        source,
+                        source.translation,
+                        source.translationWords
+                    )
+                    metadata = lyricMetadataOf("translation" to "true")
+                    isGenerated = words !== source.translationWords
+                }
+            }
+        }
+
+        val hasContent = newLine.text?.isNotBlank() == true || !newLine.words.isNullOrEmpty()
+        secondary.visible =
+            hasContent && (newLine.words?.isEmpty() == true || newLine.metadata?.getBoolean("translation") == true)
+
+        secondary.setLyric(newLine)
+        secondary.syllable.isOnlyScrollMode = isGenerated && !enableRelativeProgressHighlight
+    }
+
+    /**
+     * 当没有逐字信息但有起止时间时，构造一个包含全文本的虚拟 Word 节点以实现平滑滚动。
+     */
+    fun calculateRelativeProgressWords(
+        timing: ILyricTiming,
+        text: String?,
+        words: List<LyricWord>?
+    ): List<LyricWord>? {
+        return if (words.isNullOrEmpty() && !text.isNullOrBlank() && timing.begin < timing.end && timing.begin >= 0) {
+            listOf(
+                LyricWord(
+                    text = text,
+                    begin = timing.begin,
+                    end = timing.end,
+                    duration = timing.end - timing.begin
+                )
+            )
+        } else words
+    }
+
+    private fun setMainStyle(
+        cfg: MainTextConfig,
+        mar: MarqueeConfig,
+        syl: SyllableConfig,
+        grad: Boolean
+    ) {
+        val notifyNeeded = (cfg.enableRelativeProgress != enableRelativeProgress) ||
+                (cfg.enableRelativeProgressHighlight != enableRelativeProgressHighlight)
+
+        enableRelativeProgress = cfg.enableRelativeProgress
+        enableRelativeProgressHighlight = cfg.enableRelativeProgressHighlight
+
+        main.setStyle(LyricLineConfig(cfg, mar, syl, grad))
+        if (notifyNeeded) notifyLineChanged()
     }
 
     private fun setSecondaryStyle(
-        secondaryTextConfig: SecondaryTextConfig,
-        marqueeConfig: MarqueeConfig,
-        syllableConfig: SyllableConfig,
-        gradientProgressStyle: Boolean
+        cfg: SecondaryTextConfig,
+        mar: MarqueeConfig,
+        syl: SyllableConfig,
+        grad: Boolean
     ) {
-        val config = LyricLineConfig(
-            secondaryTextConfig,
-            marqueeConfig,
-            syllableConfig,
-            gradientProgressStyle
-        )
-        secondary.setStyle(config)
-    }
-
-    fun tryStartMarquee() {
-        if (main.isMarqueeMode()) {
-            main.startMarquee()
-        }
-        if (secondary.isMarqueeMode()) {
-            secondary.startMarquee()
-        }
-    }
-
-    fun reLayout() {
-        main.reLayout()
-        secondary.reLayout()
+        secondary.setStyle(LyricLineConfig(cfg, mar, syl, grad))
     }
 }

@@ -6,7 +6,6 @@
 
 package io.github.proify.lyricon.xposed.systemui.lyric
 
-import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
@@ -20,12 +19,13 @@ import io.github.proify.lyricon.statusbarlyric.StatusBarLyric
 import io.github.proify.lyricon.statusbarlyric.SuperLogo
 import io.github.proify.lyricon.xposed.systemui.util.LyricPrefs
 import io.github.proify.lyricon.xposed.systemui.util.NotificationCoverHelper
+import io.github.proify.lyricon.xposed.systemui.util.OnColorChangeListener
 import io.github.proify.lyricon.xposed.systemui.util.OplusCapsuleHooker
 import io.github.proify.lyricon.xposed.systemui.util.StatusBarColorMonitor
 import java.io.File
 
 object LyricViewController : ActivePlayerListener, Handler.Callback,
-    StatusBarColorMonitor.OnColorChangeListener, OplusCapsuleHooker.CapsuleStateChangeListener,
+    OnColorChangeListener, OplusCapsuleHooker.CapsuleStateChangeListener,
     NotificationCoverHelper.OnCoverUpdateListener {
 
     private const val TAG = "LyricViewController"
@@ -48,9 +48,6 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
     @Volatile
     var activePackage: String = ""
         private set
-
-    @SuppressLint("StaticFieldLeak")
-    var statusBarViewManager: StatusBarViewManager? = null
 
     var providerInfo: ProviderInfo? = null
         private set
@@ -83,7 +80,6 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
         if (DEBUG) YLog.debug(tag = TAG, msg = "onPlaybackStateChanged: $isPlaying")
 
         this.isPlaying = isPlaying
-        // arg1 传递布尔值，0开销
         uiHandler.obtainMessage(MSG_PLAYBACK_STATE, if (isPlaying) 1 else 0, 0).sendToTarget()
     }
 
@@ -133,11 +129,17 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
     }
 
     // --- 集中式 UI 处理逻辑 ---
-
     override fun handleMessage(msg: Message): Boolean {
-        val view = statusBarViewManager?.lyricView ?: return true
+        var ok = true
+        forControllerEach {
+            ok = handleMessageInternal(msg, this)
+        }
+        return ok
+    }
 
+    fun handleMessageInternal(msg: Message, controller: StatusBarViewController): Boolean {
         try {
+            val view = controller.lyricView
             when (msg.what) {
                 MSG_PROVIDER_CHANGED -> {
                     val provider: ProviderInfo? = msg.obj as? ProviderInfo
@@ -156,7 +158,7 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
                         view.setSong(null)
                         view.setPlaying(false)
                     } else {
-                        statusBarViewManager?.updateLyricStyle(LyricPrefs.getLyricStyle())
+                        controller.updateLyricStyle(LyricPrefs.getLyricStyle())
                         view.updateVisibility()
                     }
                 }
@@ -164,7 +166,6 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
                 MSG_SONG_CHANGED -> view.setSong(msg.obj as? Song)
                 MSG_PLAYBACK_STATE -> view.setPlaying(msg.arg1 == 1)
                 MSG_POSITION -> {
-                    // 合并高低位还原 Long
                     val pos = (msg.arg1.toLong() shl 32) or (msg.arg2.toLong() and 0xFFFFFFFFL)
                     view.updatePosition(pos)
                 }
@@ -177,7 +178,9 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
                 MSG_SEND_TEXT -> view.updateText(msg.obj as? String)
                 MSG_TRANSLATION_TOGGLE -> view.setDisplayTranslation(msg.arg1 == 1)
             }
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
+            YLog.error(tag = TAG, msg = "handleMessageInternal error", e = e)
+            return false
         }
         return true
     }
@@ -185,7 +188,8 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
     ////////// 非UI线程方法结束 /////////
 
     override fun onColorChanged(color: Int, lightMode: Boolean) {
-        callView {
+        if (DEBUG) YLog.debug(tag = TAG, msg = "onColorChanged: $color, $lightMode")
+        forViewEach {
             setStatusBarColor(currentStatusColor.apply {
                 this.color = color
                 this.lightMode = lightMode
@@ -195,13 +199,13 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
     }
 
     override fun onCapsuleVisibilityChanged(isShowing: Boolean) {
-        callView {
+        forViewEach {
             setOplusCapsuleVisibility(isShowing)
         }
     }
 
     override fun onCoverUpdated(packageName: String, coverFile: File) {
-        callView {
+        forViewEach {
             logoView.apply {
                 if (packageName == this.activePackage && strategy is SuperLogo.CoverStrategy) {
                     this.coverFile = coverFile
@@ -211,8 +215,16 @@ object LyricViewController : ActivePlayerListener, Handler.Callback,
         }
     }
 
-    inline fun callView(crossinline block: StatusBarLyric.() -> Unit) {
-        val view = statusBarViewManager?.lyricView ?: return
-        block(view)
+    inline fun forControllerEach(crossinline block: StatusBarViewController.() -> Unit) {
+        StatusBarViewManager.forEach { controller ->
+            block(controller)
+        }
+    }
+
+    inline fun forViewEach(crossinline block: StatusBarLyric.() -> Unit) {
+        forControllerEach {
+            val view = lyricView
+            block(view)
+        }
     }
 }

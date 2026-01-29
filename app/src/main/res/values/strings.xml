@@ -134,6 +134,13 @@
     <string name="item_text_color_background">背景颜色</string>
     <string name="item_text_color_highlight">高亮颜色</string>
     <string name="hint_custom_color">自定义</string>
+    <string name="item_text_size_ratio_in_multi_line_mode">多行模式下文字大小比例</string>
+
+    <string name="item_text_transition_config">变换动画速度</string>
+    <string name="option_text_transition_config_smooth">平滑</string>
+    <string name="option_text_transition_config_fast">迅捷</string>
+    <string name="option_text_transition_config_slow">舒缓</string>
+    <string name="option_text_transition_config_none">关闭</string>
 
     <!-- Logo 样式 -->
     <string name="item_logo_section_basic">基本</string>
@@ -175,12 +182,14 @@
     <string name="rect_right">右边距</string>
     <string name="rect_bottom">下边距</string>
 
-    <!-- 提供者信息 -->
     <string name="item_provider_info_secondary" formatted="true" translatable="false">%s, %s %s</string>
     <string name="module_tag_syllable">动态歌词</string>
     <string name="module_tag_translation">翻译</string>
     <string name="no_provider_available">没有可用的歌词提供者</string>
+
     <string name="item_base_hide_on_lock_screen">在锁屏界面隐藏</string>
-    <string name="item_text_size_ratio_in_multi_line_mode">多行模式下文字大小比例</string>
+    <string name="option_provider_list_full">完整</string>
+    <string name="option_provider_list_short">精简</string>
+    <string name="no_query_app_permission">请授予读取应用权限</string>
 
 </resources>

@@ -4,7 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-@file:Suppress("KotlinConstantConditions", "MemberVisibilityCanBePrivate", "DEPRECATION")
 
 package io.github.proify.lyricon.lyric.style
 
@@ -50,9 +49,21 @@ data class TextStyle(
     var relativeProgress: Boolean = Defaults.RELATIVE_PROGRESS,
     var relativeProgressHighlight: Boolean = Defaults.RELATIVE_PROGRESS_HIGHLIGHT,
     var textSizeRatioInMultiLineMode: Float = Defaults.TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE,
+
+    var transitionConfig: String? = Defaults.TRANSITION_CONFIG,
 ) : AbstractStyle(), Parcelable {
 
+    companion object {
+        const val TRANSITION_CONFIG_FAST: String = "fast"
+        const val TRANSITION_CONFIG_SMOOTH: String = "smooth"
+        const val TRANSITION_CONFIG_SLOW: String = "slow"
+        const val TRANSITION_CONFIG_NONE = "none"
+
+    }
+
     object Defaults {
+        const val TRANSITION_CONFIG: String = TRANSITION_CONFIG_SMOOTH
+
         const val TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE: Float = 1f
         const val RELATIVE_PROGRESS: Boolean = true
         const val RELATIVE_PROGRESS_HIGHLIGHT: Boolean = false
@@ -107,12 +118,12 @@ data class TextStyle(
             Defaults.DARK_MODE_COLOR
         )
 
-        fadingEdgeEnabled = preferences.getBoolean(
-            "lyric_style_text_fading_edge_enabled",
-            Defaults.FADING_EDGE_ENABLED
-        )
-        fadingEdgeLength =
-            preferences.getInt("lyric_style_text_fading_edge_length", Defaults.FADING_EDGE_LENGTH)
+//        fadingEdgeEnabled = preferences.getBoolean(
+//            "lyric_style_text_fading_edge_enabled",
+//            Defaults.FADING_EDGE_ENABLED
+//        )
+//        fadingEdgeLength =
+//            preferences.getInt("lyric_style_text_fading_edge_length", Defaults.FADING_EDGE_LENGTH)
 
         typeFace = preferences.getString("lyric_style_text_typeface", Defaults.TYPE_FACE)
         typeFaceBold =
@@ -160,6 +171,11 @@ data class TextStyle(
             "lyric_style_text_size_ratio_in_multi_line_mode",
             Defaults.TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE
         )
+
+        transitionConfig = preferences.getString(
+            "lyric_style_text_transition_config",
+            Defaults.TRANSITION_CONFIG
+        )
     }
 
     override fun onWrite(editor: SharedPreferences.Editor) {
@@ -173,8 +189,8 @@ data class TextStyle(
         editor.putString("lyric_style_text_color_light_mode", lightModeColor.toJson())
         editor.putString("lyric_style_text_color_dark_mode", darkModeColor.toJson())
 
-        editor.putBoolean("lyric_style_text_fading_edge_enabled", fadingEdgeEnabled)
-        editor.putInt("lyric_style_text_fading_edge_length", fadingEdgeLength)
+        //editor.putBoolean("lyric_style_text_fading_edge_enabled", fadingEdgeEnabled)
+        //editor.putInt("lyric_style_text_fading_edge_length", fadingEdgeLength)
 
         editor.putString("lyric_style_text_typeface", typeFace)
         editor.putBoolean("lyric_style_text_typeface_bold", typeFaceBold)
@@ -199,6 +215,11 @@ data class TextStyle(
         editor.putFloat(
             "lyric_style_text_size_ratio_in_multi_line_mode",
             textSizeRatioInMultiLineMode
+        )
+
+        editor.putString(
+            "lyric_style_text_transition_config",
+            transitionConfig
         )
     }
 }

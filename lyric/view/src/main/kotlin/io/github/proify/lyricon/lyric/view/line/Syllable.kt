@@ -262,7 +262,6 @@ class Syllable(private val view: LyricLineView) {
             v.isScrollFinished = false
         }
 
-        // 在 Syllable.ScrollController.update 中
         fun update(currentX: Float, v: LyricLineView) {
             val lyricW = v.lyricWidth
             val viewW = v.measuredWidth.toFloat()

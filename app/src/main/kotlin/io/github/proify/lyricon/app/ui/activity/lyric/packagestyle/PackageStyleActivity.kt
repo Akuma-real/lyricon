@@ -47,7 +47,6 @@ import io.github.proify.lyricon.app.compose.AppToolBarContainer
 import io.github.proify.lyricon.app.compose.custom.miuix.basic.MiuixScrollBehavior
 import io.github.proify.lyricon.app.compose.custom.miuix.basic.ScrollBehavior
 import io.github.proify.lyricon.app.ui.activity.lyric.AbstractLyricActivity
-import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.page.AnimPage
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.page.LogoPage
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.page.TextPage
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.sheet.AppCache
@@ -307,7 +306,7 @@ private fun StyleContentPager(
         when (page) {
             0 -> TextPage(scrollBehavior, sharedPreferences)
             1 -> LogoPage(scrollBehavior, sharedPreferences)
-            2 -> AnimPage(scrollBehavior)
+            //2 -> AnimPage(scrollBehavior)
         }
     }
 }

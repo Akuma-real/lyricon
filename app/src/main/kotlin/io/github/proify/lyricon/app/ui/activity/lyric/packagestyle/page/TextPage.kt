@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -29,8 +33,10 @@ import io.github.proify.lyricon.app.compose.preference.InputType
 import io.github.proify.lyricon.app.compose.preference.RectInputPreference
 import io.github.proify.lyricon.app.compose.preference.SwitchPreference
 import io.github.proify.lyricon.app.compose.preference.TextColorPreference
+import io.github.proify.lyricon.app.util.editCommit
 import io.github.proify.lyricon.lyric.style.TextStyle
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.extra.SuperDropdown
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 @Composable
@@ -87,11 +93,11 @@ fun TextPage(scrollBehavior: ScrollBehavior, sharedPreferences: SharedPreference
                     inputType = InputType.DOUBLE,
                     defaultValue = TextStyle.Defaults.TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE.toString(),
                     minValue = 0.1,
-                    maxValue = 2.0,
+                    maxValue = 1.0,
                     title = stringResource(R.string.item_text_size_ratio_in_multi_line_mode),
                     leftAction = { IconActions(painterResource(R.drawable.ic_format_size)) },
                 )
-
+                TransitionConfigPreference(sharedPreferences)
             }
         }
         item(key = "color") {
@@ -152,6 +158,7 @@ fun TextPage(scrollBehavior: ScrollBehavior, sharedPreferences: SharedPreference
                     title = stringResource(R.string.item_text_typeface),
                     leftAction = { IconActions(painterResource(R.drawable.ic_fontdownload)) },
                 )
+
                 InputPreference(
                     sharedPreferences = sharedPreferences,
                     inputType = InputType.INTEGER,
@@ -160,6 +167,7 @@ fun TextPage(scrollBehavior: ScrollBehavior, sharedPreferences: SharedPreference
                     title = stringResource(R.string.item_text_weight),
                     leftAction = { IconActions(painterResource(R.drawable.ic_fontdownload)) },
                 )
+
                 CheckboxPreference(
                     sharedPreferences,
                     key = "lyric_style_text_typeface_bold",
@@ -298,4 +306,45 @@ fun TextPage(scrollBehavior: ScrollBehavior, sharedPreferences: SharedPreference
             }
         }
     }
+}
+
+@Composable
+private fun TransitionConfigPreference(preferences: SharedPreferences) {
+    val config = preferences.getString(
+        "lyric_style_text_transition_config",
+        TextStyle.TRANSITION_CONFIG_SMOOTH
+    )
+
+    val options = listOf(
+        stringResource(R.string.option_text_transition_config_none),
+        stringResource(R.string.option_text_transition_config_fast),
+        stringResource(R.string.option_text_transition_config_smooth),
+        stringResource(R.string.option_text_transition_config_slow)
+    )
+    val values = listOf(
+        TextStyle.TRANSITION_CONFIG_NONE,
+        TextStyle.TRANSITION_CONFIG_FAST,
+        TextStyle.TRANSITION_CONFIG_SMOOTH,
+        TextStyle.TRANSITION_CONFIG_SLOW
+    )
+    var selectedIndex by remember {
+        mutableIntStateOf(
+            values.indexOf(config)
+        )
+    }
+    SuperDropdown(
+        leftAction = { IconActions(painterResource(R.drawable.ic_speed)) },
+        title = stringResource(R.string.item_text_transition_config),
+        items = options,
+        selectedIndex = selectedIndex,
+        onSelectedIndexChange = {
+            selectedIndex = it
+            preferences.editCommit {
+                putString(
+                    "lyric_style_text_transition_config",
+                    values[it]
+                )
+            }
+        }
+    )
 }

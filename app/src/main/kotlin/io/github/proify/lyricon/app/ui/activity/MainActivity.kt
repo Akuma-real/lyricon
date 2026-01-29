@@ -62,8 +62,8 @@ import io.github.proify.lyricon.app.compose.custom.miuix.extra.SuperArrow
 import io.github.proify.lyricon.app.compose.custom.miuix.extra.SuperDialog
 import io.github.proify.lyricon.app.event.SettingChangedEvent
 import io.github.proify.lyricon.app.ui.activity.lyric.BasicLyricStyleActivity
-import io.github.proify.lyricon.app.ui.activity.lyric.LyricProviderActivity
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.PackageStyleActivity
+import io.github.proify.lyricon.app.ui.activity.lyric.provider.LyricProviderActivity
 import io.github.proify.lyricon.app.util.Utils
 import io.github.proify.lyricon.app.util.collectEvent
 import io.github.proify.lyricon.app.util.editCommit
@@ -162,6 +162,7 @@ class MainActivity : BaseActivity() {
         val safeMode: State<Boolean> get() = _safeMode
         val isWaitingForReboot: State<Boolean> get() = _isWaitingForReboot
 
+        val showPopup: MutableState<Boolean> = mutableStateOf(false)
         fun updateSafeMode(isSafe: Boolean) {
             _safeMode.value = isSafe
             LyriconApp.updateSafeMode(isSafe)
@@ -237,6 +238,9 @@ class MainActivity : BaseActivity() {
         onRestartSystemUI: () -> Unit = {},
         onRestartApp: () -> Unit = {}
     ) {
+        val fallbackShowPopup = remember { mutableStateOf(false) }
+        val showPopupState = model?.showPopup ?: fallbackShowPopup
+
         val cardStatus = determineCardStatus(
             safeMode = model?.safeMode?.value ?: false,
             isWaitingForReboot = model?.isWaitingForReboot?.value ?: false,
@@ -245,7 +249,7 @@ class MainActivity : BaseActivity() {
 
         AppToolBarListContainer(
             title = stringResource(R.string.app_name),
-            actions = { TopBarActions(onRestartSystemUI, onRestartApp) },
+            actions = { TopBarActions(showPopupState, onRestartSystemUI, onRestartApp) },
             scaffoldContent = {
                 if (model != null) RestartFailDialog(showState = model.showRestartFailDialog)
             }
@@ -460,10 +464,10 @@ class MainActivity : BaseActivity() {
 
     @Composable
     private fun TopBarActions(
+        showPopup: MutableState<Boolean>,
         onRestartSystemUI: () -> Unit,
         onRestartApp: () -> Unit
     ) {
-        val showPopup = remember { mutableStateOf(false) }
 
         Box(modifier = Modifier.padding(end = 14.dp)) {
             IconButton(
@@ -508,7 +512,11 @@ class MainActivity : BaseActivity() {
                         optionSize = menuItems.size,
                         isSelected = false,
                         onSelectedIndexChange = {
-                            if (index == 0) onRestartSystemUI() else onRestartApp()
+                            if (index == 0) {
+                                onRestartSystemUI()
+                            } else {
+                                onRestartApp()
+                            }
                             showPopup.value = false
                         },
                         index = index

@@ -11,8 +11,10 @@ import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.Context
 import android.graphics.Color
+import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.contains
@@ -71,58 +73,57 @@ class StatusBarLyric(
         }
     }
 
-    /**
-     * 启用单次过渡变化动画，随后禁用
-     */
-    private fun enableTransitionChangeType() {
-        myLayoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-    }
-
     var oplusCapsuleShowing: Boolean = false
 
     fun setOplusCapsuleVisibility(isShowing: Boolean) {
         oplusCapsuleShowing = isShowing
-        enableTransitionChangeType()
+        enableSingleTransitionChange()
         updateWidth(currentStyle)
         logoView.oplusCapsuleShowing = isShowing
     }
 
-    val myLayoutTransition: LayoutTransition = LayoutTransitionX().apply {
-        setAnimateParentHierarchy(true)
-        enableTransitionType(LayoutTransition.CHANGING)
+    val layoutTransitionX: LayoutTransitionX = LayoutTransitionX().apply {
+        addTransitionListener(object : LayoutTransition.TransitionListener {
+            override fun endTransition(
+                p0: LayoutTransition?,
+                p1: ViewGroup?,
+                p2: View?,
+                p3: Int
+            ) {
+                layoutTransition = null
+            }
 
-//        addTransitionListener(object : LayoutTransition.TransitionListener {
-//            override fun endTransition(
-//                transition: LayoutTransition?,
-//                container: ViewGroup?,
-//                view: View?,
-//                transitionType: Int
-//            ) {
-//                //禁用
-//                //disableTransitionType(LayoutTransition.CHANGING)
-//            }
-//
-//            override fun startTransition(
-//                transition: LayoutTransition?,
-//                container: ViewGroup?,
-//                view: View?,
-//                transitionType: Int
-//            ) {
-//            }
-//        })
+            override fun startTransition(
+                p0: LayoutTransition,
+                p1: ViewGroup,
+                p2: View,
+                transitionType: Int
+            ) {
+            }
+        })
+    }
+
+    private fun enableSingleTransitionChange() {
+        layoutTransition = layoutTransitionX
     }
 
     var sleepMode: Boolean = false
         set(value) {
-            //YLog.debug("休眠模式：$value")
+            if (field == value) return
             field = value
+
+            Log.d("StatusBarLyric", "休眠模式：$value")
+
             if (value) {
                 dataDuringSleepMode = DataDuringSleepMode()
             } else {
-                dataDuringSleepMode?.let { updatePosition(it.position) }
+                dataDuringSleepMode?.let {
+                    seekTo(it.position)
+                }
                 dataDuringSleepMode = null
             }
         }
+
     private var dataDuringSleepMode: DataDuringSleepMode? = null
 
     private class DataDuringSleepMode(
@@ -139,9 +140,9 @@ class StatusBarLyric(
             })
         updateLogoLocation()
         visibility = GONE
-        layoutTransition = myLayoutTransition
+        layoutTransition = null
 
-        applyStyle(initialStyle)
+        applyInitStyle(initialStyle)
         textView.setOnHierarchyChangeListener(textViewOnHierarchyChangeListener)
     }
 
@@ -163,18 +164,19 @@ class StatusBarLyric(
     }
 
     fun updateStyle(style: LyricStyle) {
+        enableSingleTransitionChange()
         currentStyle = style
 
         logoView.applyStyle(style)
         updateLogoLocation()
 
         textView.applyStyle(style)
+
         updateLayoutParams(style)
-        invalidate()
         requestLayout()
     }
 
-    private fun applyStyle(style: LyricStyle) {
+    private fun applyInitStyle(style: LyricStyle) {
         currentStyle = style
         logoView.applyStyle(style)
         textView.applyStyle(style)
@@ -245,7 +247,7 @@ class StatusBarLyric(
         if (curVisibility != newVisibility) {
             if (temporarilyProhibitTransitions) layoutTransition = null
             visibility = newVisibility
-            post { if (layoutTransition == null) layoutTransition = myLayoutTransition }
+            post { if (layoutTransition == null) layoutTransition = layoutTransitionX }
         }
     }
 

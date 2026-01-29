@@ -141,7 +141,7 @@ fun AppToolBarListContainer(
     titleDropdown: Boolean = false,
     titleOnClick: () -> Unit = {},
     showEmpty: Boolean = false,
-    emptyContent: @Composable () -> Unit = {},
+    empty: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit
 ) {
     AppTheme {
@@ -206,7 +206,7 @@ fun AppToolBarListContainer(
                             .fillMaxSize()
                             .nestedScroll(scrollBehavior.nestedScrollConnection)
                     ) {
-                        emptyContent()
+                        empty()
                     }
                 }
             }

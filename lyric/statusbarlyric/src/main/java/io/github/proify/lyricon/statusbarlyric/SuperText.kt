@@ -9,6 +9,7 @@ package io.github.proify.lyricon.statusbarlyric
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.util.Log
 import android.widget.TextView
 import androidx.core.view.updatePadding
@@ -60,6 +61,7 @@ class SuperText(context: Context) : LyricPlayerView(context) {
     fun applyStyle(style: LyricStyle) {
         this.currentLyricStyle = style
         val textStyle = style.packageStyle.text
+        setTransitionConfig(style.packageStyle.text.transitionConfig)
 
         updateViewLayout(textStyle)
 
@@ -189,7 +191,7 @@ class SuperText(context: Context) : LyricPlayerView(context) {
             } else null
         } ?: linkedTextView?.typeface ?: Typeface.DEFAULT
 
-        return if (textStyle.fontWeight > 0) {
+        return if (textStyle.fontWeight > 0 && Build.VERSION.SDK_INT >= 28) {
             Typeface.create(
                 baseTypeface,
                 min(FONT_WEIGHT_MAX, textStyle.fontWeight),

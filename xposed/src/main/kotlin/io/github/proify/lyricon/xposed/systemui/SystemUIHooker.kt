@@ -11,6 +11,7 @@ package io.github.proify.lyricon.xposed.systemui
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.doOnAttach
 import com.highcapable.kavaref.KavaRef.Companion.resolve
 import com.highcapable.yukihookapi.hook.core.YukiMemberHookCreator
 import com.highcapable.yukihookapi.hook.entity.YukiBaseHooker
@@ -24,20 +25,18 @@ import io.github.proify.lyricon.central.provider.player.ActivePlayerDispatcher
 import io.github.proify.lyricon.common.util.ScreenStateMonitor
 import io.github.proify.lyricon.common.util.ViewHierarchyParser
 import io.github.proify.lyricon.xposed.systemui.lyric.LyricViewController
+import io.github.proify.lyricon.xposed.systemui.lyric.StatusBarViewController
 import io.github.proify.lyricon.xposed.systemui.lyric.StatusBarViewManager
 import io.github.proify.lyricon.xposed.systemui.util.CrashDetector
 import io.github.proify.lyricon.xposed.systemui.util.LyricPrefs
 import io.github.proify.lyricon.xposed.systemui.util.NotificationCoverHelper
 import io.github.proify.lyricon.xposed.systemui.util.OplusCapsuleHooker
+import io.github.proify.lyricon.xposed.systemui.util.StatusBarColorMonitor
 import io.github.proify.lyricon.xposed.systemui.util.ViewVisibilityTracker
 
 object SystemUIHooker : YukiBaseHooker() {
     private val testCrash = false
     private var layoutInflaterResult: YukiMemberHookCreator.MemberHookCreator.Result? = null
-
-    @SuppressLint("StaticFieldLeak")
-    private var statusBarViewManager: StatusBarViewManager? = null
-
     private var safeMode = false
 
     override fun onHook() {
@@ -88,12 +87,10 @@ object SystemUIHooker : YukiBaseHooker() {
             }.hook {
                 after {
                     val id = args(0).int()
-                    if (id == statusBarLayoutId) {
-                        val result = result<ViewGroup>() ?: return@after
-                        setupStatusBarView(result)
-                        layoutInflaterResult?.remove()
-                        layoutInflaterResult = null
-                    }
+                    if (id != statusBarLayoutId) return@after
+                    val result = result<ViewGroup>() ?: return@after
+
+                    addStatusBarView(result)
                 }
             }
     }
@@ -113,13 +110,17 @@ object SystemUIHooker : YukiBaseHooker() {
     private fun initDataChannel() {
         dataChannel.wait(key = AppBridgeConstants.REQUEST_UPDATE_LYRIC_STYLE) {
             val style = LyricPrefs.getLyricStyle()
-            statusBarViewManager?.updateLyricStyle(style)
+            StatusBarViewManager.forEach {
+                it.updateLyricStyle(style)
+            }
         }
         dataChannel.wait<String>(key = AppBridgeConstants.REQUEST_HIGHLIGHT_VIEW) { id ->
-            statusBarViewManager?.highlightView(id)
+            StatusBarViewManager.forEach {
+                it.highlightView(id)
+            }
         }
         dataChannel.wait<String>(key = AppBridgeConstants.REQUEST_VIEW_TREE) { _ ->
-            statusBarViewManager?.let {
+            StatusBarViewManager.forEach {
                 val node = ViewHierarchyParser.buildNodeTree(it.statusBarView)
                 val data = json.safeEncode(node)
                     .toByteArray(Charsets.UTF_8)
@@ -129,24 +130,23 @@ object SystemUIHooker : YukiBaseHooker() {
                     AppBridgeConstants.REQUEST_VIEW_TREE_CALLBACK,
                     data
                 )
+                return@forEach
             }
         }
     }
 
-    private fun setupStatusBarView(view: ViewGroup) {
-        YLog.info("setupStatusBarView $view")
-        val statusBarViewManager = StatusBarViewManager(
-            view,
-            LyricPrefs.getLyricStyle()
-        )
-        this.statusBarViewManager = statusBarViewManager
+    private fun addStatusBarView(view: ViewGroup) {
+        view.doOnAttach {
+            val controller = StatusBarViewController(view, LyricPrefs.getLyricStyle())
+            StatusBarViewManager.add(controller)
+            val isFirst = StatusBarViewManager.controllers.size == 1
 
-        LyricViewController.statusBarViewManager = statusBarViewManager
-        ScreenStateMonitor.addListener(statusBarViewManager)
-
-        BridgeCentral.sendBootCompleted()
-
-        if (testCrash) view.postDelayed({ error("test crash") }, 3000)
+            if (isFirst) {
+                BridgeCentral.sendBootCompleted()
+                StatusBarColorMonitor.hookFromClock(view)
+                if (testCrash) view.postDelayed({ error("test crash") }, 3000)
+            }
+        }
     }
 
     private fun handleCrashMode() {

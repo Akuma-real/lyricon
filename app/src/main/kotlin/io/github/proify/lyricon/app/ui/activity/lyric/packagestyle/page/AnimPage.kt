@@ -18,6 +18,7 @@ import io.github.proify.lyricon.app.compose.custom.miuix.basic.Card
 import io.github.proify.lyricon.app.compose.custom.miuix.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
+@Deprecated("Not impl")
 @Composable
 fun AnimPage(scrollBehavior: ScrollBehavior) {
     LazyColumn(

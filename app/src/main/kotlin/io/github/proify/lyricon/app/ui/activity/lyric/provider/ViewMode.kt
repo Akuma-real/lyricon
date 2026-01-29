@@ -4,8 +4,9 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-package io.github.proify.lyricon.lyric.view
+package io.github.proify.lyricon.app.ui.activity.lyric.provider
 
-interface UpdatableColor {
-    fun updateColor(primary: Int, background: Int, highlight: Int)
+object ViewMode {
+    const val SHORT = 0
+    const val FULL = 1
 }

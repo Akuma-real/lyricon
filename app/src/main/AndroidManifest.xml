@@ -49,7 +49,7 @@
             android:label="@string/activity_package_style_manager" />
 
         <activity
-            android:name=".ui.activity.lyric.LyricProviderActivity"
+            android:name=".ui.activity.lyric.provider.LyricProviderActivity"
             android:label="@string/activity_lyric_provider" />
 
         <activity

@@ -111,17 +111,17 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
     }
 
     override fun updateColor(
-        primaryColor: Int,
-        backgroundColor: Int,
-        highlightColor: Int
+        primary: Int,
+        background: Int,
+        highlight: Int
     ) {
         textPaint.apply {
-            color = primaryColor
+            color = primary
         }
-        syllable.setColor(backgroundColor, highlightColor)
+        syllable.setColor(background, highlight)
         invalidate()
 
-        if (DEBUG) Log.d(TAG, "updateColor: $primaryColor, $backgroundColor, $highlightColor")
+        if (DEBUG) Log.d(TAG, "updateColor: $primary, $background, $highlight")
     }
 
     fun setStyle(configs: LyricLineConfig) {

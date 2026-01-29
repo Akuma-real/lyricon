@@ -13,6 +13,6 @@ import kotlinx.serialization.Serializable
 @Parcelize
 @Serializable
 data class LogoColor(
-    var followTextColor: Boolean = true,
+    var followTextColor: Boolean = false,
     var color: Int = 0
 ) : Parcelable

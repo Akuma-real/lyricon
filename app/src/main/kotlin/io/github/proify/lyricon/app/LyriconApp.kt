@@ -64,9 +64,8 @@ class LyriconApp : ModuleApplication() {
 fun updateRemoteLyricStyle() {
     fun getCallSourceMethod(): String {
         val stackTrace = Thread.currentThread().stackTrace
-        return stackTrace[3].methodName
+        return if (stackTrace.size > 3) "${stackTrace[3].className}.${stackTrace[3].methodName}" else "Unknown"
     }
-
     Log.d(LyriconApp.TAG, "updateRemoteLyricStyle called from ${getCallSourceMethod()}")
     systemUIChannel.put(AppBridgeConstants.REQUEST_UPDATE_LYRIC_STYLE)
 }

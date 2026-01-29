@@ -13,10 +13,11 @@ import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.core.view.size
 import kotlin.math.roundToInt
 
 fun ViewGroup.getChildAtOrNull(index: Int): View? =
-    if (childCount > index) getChildAt(index) else null
+    if (index in 0..<size) getChildAt(index) else null
 
 var View.visibilityIfChanged: Int
     get() = visibility
