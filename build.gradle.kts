@@ -15,4 +15,4 @@ extra["targetSdkVersion"] = 36
 extra["minSdkVersion"] = 28
 extra["buildTime"] = System.currentTimeMillis()
 
-extra["providerSdkVersion"] = "0.1.666-SNAPSHOT"
+extra["providerSdkVersion"] = "0.1.66"

@@ -4,15 +4,10 @@
   ~ http://www.apache.org/licenses/LICENSE-2.0
   -->
 
-<!--suppress ALL -->
 <resources>
-
-    <!-- 应用基础信息 -->
     <string name="app_name">词幕</string>
     <string name="github_home" translatable="false">https://github.com/proify/lyricon</string>
     <string name="xposed_description">为状态栏拓展歌词功能🎵</string>
-
-    <!-- 通用操作和按钮 -->
     <string name="ok" translatable="false">@android:string/ok</string>
     <string name="yes" translatable="false">@android:string/yes</string>
     <string name="no" translatable="false">@android:string/no</string>
@@ -33,8 +28,6 @@
     <string name="basic">基本</string>
     <string name="unknown">未知</string>
     <string name="author">作者</string>
-
-    <!-- 状态信息 -->
     <string name="status_enabled">已启用</string>
     <string name="status_not_enabled">未启用</string>
     <string name="module_status_activated">已激活</string>
@@ -42,20 +35,14 @@
     <string name="module_status_system_ui_safe_mode">系统界面异常，已禁用</string>
     <string name="module_status_waiting_for_reboot">待重启系统界面</string>
     <string name="module_status_summary" formatted="true" translatable="false">v%s</string>
-
-    <!-- 重启操作 -->
     <string name="restart_system_ui">重启系统界面</string>
     <string name="restart_app">重启软件</string>
     <string name="restart_fail">重启失败</string>
     <string name="message_app_restart_fail">请确认已授予 Root 权限</string>
-
-    <!-- 单位 -->
     <string name="unit_ms">毫秒</string>
     <string name="unit_sp" translatable="false">sp</string>
     <string name="unit_dp" translatable="false">dp</string>
     <string name="unit_ms_px" translatable="false">ms/px</string>
-
-    <!-- 活动页面/设置项 -->
     <string name="activity_settings">设置</string>
     <string name="activity_about">关于</string>
     <string name="activity_anchor">锚点</string>
@@ -64,8 +51,6 @@
     <string name="activity_package_style_manager">管理包配置</string>
     <string name="activity_lyric_provider">歌词提供者</string>
     <string name="activity_open_source_license">开放源代码许可</string>
-
-    <!-- 设置列表条目及说明 -->
     <string name="item_base_lyric_style">基本配置</string>
     <string name="item_summary_base_lyric_style">配置歌词位置、大小及状态栏显示规则等</string>
     <string name="item_package_style_manager">包配置</string>
@@ -77,13 +62,8 @@
     <string name="item_summary_app_settings">设置语言，主题等</string>
     <string name="item_about_app">关于</string>
     <string name="item_summary_about_app">软件信息</string>
-
-    <!-- 包配置管理 -->
     <string name="manager_package_config">管理包配置</string>
     <string name="add_package_config">添加包配置</string>
-    <string name="default_config">默认配置</string>
-
-    <!-- 应用信息 -->
     <string name="item_app_version">版本</string>
     <string name="item_build_time">构建时间</string>
     <string name="item_app_version_summary" formatted="true" translatable="false">%s (%s) %s</string>
@@ -98,13 +78,9 @@
     <string name="option_app_theme_mode_dark">暗色</string>
     <string name="option_app_theme_mode_follow_system">跟随系统</string>
     <string name="item_app_theme_monet_color">莫奈配色</string>
-
-    <!-- 选项卡/功能分类 -->
     <string name="tab_style_text">文字</string>
     <string name="tab_style_icon">图标</string>
     <string name="tab_style_anim">动画</string>
-
-    <!-- 文字歌词样式 -->
     <string name="item_text_size">大小</string>
     <string name="item_text_margins">边距</string>
     <string name="item_text_paddings">内边距</string>
@@ -114,7 +90,7 @@
     <string name="item_text_color_dark_mode">暗场景下颜色</string>
     <string name="item_text_font">字体</string>
     <string name="item_text_typeface">自定义字体</string>
-    <string name="item_text_weight">字重大小</string>
+    <string name="item_text_font_weight">字重大小</string>
     <string name="item_text_typeface_bold">加粗样式</string>
     <string name="item_text_typeface_italic">斜体样式</string>
     <string name="item_text_marquee">跑马灯</string>
@@ -125,7 +101,7 @@
     <string name="item_text_marquee_repeat_unlimited">启用无限滚动</string>
     <string name="item_text_marquee_repeat_count">最大滚动次数</string>
     <string name="item_text_marquee_stop_at_end">结束时在末尾停止</string>
-    <string name="item_text_gradient_progress_style">渐变进度样式</string>
+    <string name="item_text_fading_style">羽化进度样式</string>
     <string name="item_text_syllable">动态歌词</string>
     <string name="item_text_relative_progress">启用相对进度歌词</string>
     <string name="item_text_relative_progress_summary">当歌词缺少单词数据时，将整行作为单词显示，高亮范围与整行一致</string>
@@ -134,15 +110,12 @@
     <string name="item_text_color_background">背景颜色</string>
     <string name="item_text_color_highlight">高亮颜色</string>
     <string name="hint_custom_color">自定义</string>
-    <string name="item_text_size_ratio_in_multi_line_mode">多行模式下文字大小比例</string>
-
+    <string name="item_text_size_scale_in_multi_line">多行模式下文字大小比例</string>
     <string name="item_text_transition_config">变换动画速度</string>
     <string name="option_text_transition_config_smooth">平滑</string>
     <string name="option_text_transition_config_fast">迅捷</string>
     <string name="option_text_transition_config_slow">舒缓</string>
     <string name="option_text_transition_config_none">关闭</string>
-
-    <!-- Logo 样式 -->
     <string name="item_logo_section_basic">基本</string>
     <string name="item_logo_enable">启用</string>
     <string name="item_logo_margins">边距</string>
@@ -159,11 +132,9 @@
     <string name="item_logo_color_dark">暗场景下颜色</string>
     <string name="item_logo_size">大小</string>
     <string name="option_logo_color_follow_text">跟随文字颜色</string>
-    <string name="item_logo_insertion_order">插入顺序</string>
-    <string name="item_logo_insertion_before">之前</string>
-    <string name="item_logo_insertion_after">之后</string>
-
-    <!-- 基础歌词样式 -->
+    <string name="item_logo_position">插入顺序</string>
+    <string name="item_logo_position_before">之前</string>
+    <string name="item_logo_position_after">之后</string>
     <string name="item_base_anchor">锚点</string>
     <string name="item_base_insertion_order">插入顺序</string>
     <string name="item_base_insertion_before">之前</string>
@@ -172,24 +143,21 @@
     <string name="item_base_width_color_os_capsule">宽度（流体云模式下）</string>
     <string name="item_base_margins">边距</string>
     <string name="item_base_paddings">内边距</string>
-
-    <!-- 可见性规则 -->
     <string name="option_visibility_default">默认</string>
     <string name="option_visibility_hide_when_playing">播放时隐藏</string>
-
     <string name="rect_left">左边距</string>
     <string name="rect_top">上边距</string>
     <string name="rect_right">右边距</string>
     <string name="rect_bottom">下边距</string>
-
     <string name="item_provider_info_secondary" formatted="true" translatable="false">%s, %s %s</string>
     <string name="module_tag_syllable">动态歌词</string>
     <string name="module_tag_translation">翻译</string>
     <string name="no_provider_available">没有可用的歌词提供者</string>
-
-    <string name="item_base_hide_on_lock_screen">在锁屏界面隐藏</string>
+    <string name="item_base_lockscreen_hidden">在锁屏界面隐藏</string>
     <string name="option_provider_list_full">完整</string>
     <string name="option_provider_list_short">精简</string>
     <string name="no_query_app_permission">请授予读取应用权限</string>
+    <string name="package_config_default">默认配置</string>
+    <string name="item_text_fading_edge_length">羽化边缘长度</string>
 
 </resources>

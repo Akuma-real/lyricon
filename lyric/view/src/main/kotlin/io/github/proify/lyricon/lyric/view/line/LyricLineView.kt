@@ -15,7 +15,6 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.Choreographer
 import android.view.View
-import android.view.ViewTreeObserver
 import io.github.proify.lyricon.lyric.model.LyricLine
 import io.github.proify.lyricon.lyric.view.LyricLineConfig
 import io.github.proify.lyricon.lyric.view.UpdatableColor
@@ -94,19 +93,12 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
         }
     }
 
-    //监听动画导致的频繁位移
-    private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener {
-        reLayout()
-    }
-
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
         reset()
     }
 
@@ -152,6 +144,15 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
             repeatCount = marqueeConfig.repeatCount
             stopAtEnd = marqueeConfig.stopAtEnd
         }
+
+        if (configs.fadingEdgeLength == 0) {
+            setFadingEdgeLength(0)
+            isHorizontalFadingEdgeEnabled = false
+        } else {
+            setFadingEdgeLength(configs.fadingEdgeLength)
+            isHorizontalFadingEdgeEnabled = true
+        }
+
         refreshModelSizes()
         invalidate()
     }
@@ -175,6 +176,13 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
     fun refreshModelSizes() {
         lyricModel.updateSizes(textPaint)
     }
+
+//    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+//        super.onSizeChanged(w, h, oldw, oldh)
+//        if (w > 0 && h > 0) {
+//            refreshModelSizes()
+//        }
+//    }
 
     override fun getLeftFadingEdgeStrength(): Float {
         // 基础检查：文本未溢出或未开启渐隐
@@ -229,6 +237,10 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
             } else {
                 // 内容还在持续（主体还没走完，或者鬼影已经进场）
                 1.0f
+            }
+        } else if (isSyllableMode()) {
+            if (isPlayFinished()) {
+                return 0f
             }
         }
 
@@ -312,7 +324,11 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
 
             if (changed) postInvalidateOnAnimation()
 
-            if (running) Choreographer.getInstance().postFrameCallback(this)
+            when {
+                isMarqueeMode() && isOverflow().not() -> stop()
+                isSyllableMode() && isPlayFinished() -> stop()
+                running -> Choreographer.getInstance().postFrameCallback(this)
+            }
         }
     }
 }

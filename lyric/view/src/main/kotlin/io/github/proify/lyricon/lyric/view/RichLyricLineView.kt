@@ -10,8 +10,10 @@ package io.github.proify.lyricon.lyric.view
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Canvas
 import android.view.Gravity
 import android.widget.LinearLayout
+import androidx.core.graphics.withScale
 import androidx.core.view.forEach
 import io.github.proify.lyricon.lyric.model.LyricLine
 import io.github.proify.lyricon.lyric.model.LyricWord
@@ -22,9 +24,6 @@ import io.github.proify.lyricon.lyric.view.line.LyricLineView
 import io.github.proify.lyricon.lyric.view.util.LayoutTransitionX
 import io.github.proify.lyricon.lyric.view.util.visible
 
-/**
- * 富文本歌词行视图，支持主标题、副标题/翻译。
- */
 @SuppressLint("ViewConstructor")
 class RichLyricLineView(
     context: Context,
@@ -38,9 +37,10 @@ class RichLyricLineView(
         private val EMPTY_LYRIC_LINE = LyricLine()
     }
 
-    // --- 视图持有者 ---
     val main = LyricLineView(context)
     val secondary = LyricLineView(context).apply { visible = false }
+
+    private var renderScale = 1.0f
 
     private fun updateLayoutTransitionX(config: String? = LayoutTransitionX.TRANSITION_CONFIG_SMOOTH) {
         val layoutTransitionX = LayoutTransitionX(config)
@@ -62,21 +62,41 @@ class RichLyricLineView(
         updateLayoutTransitionX()
     }
 
-    fun setTransitionConfig(config: String?) {
-        updateLayoutTransitionX(config)
-    }
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (renderScale != 1.0f && renderScale > 0) {
+            val originalWidth = MeasureSpec.getSize(widthMeasureSpec)
+            val mode = MeasureSpec.getMode(widthMeasureSpec)
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        pivotY = h / 2f
-        pivotX = 0f
+            val compensatedWidth = (originalWidth / renderScale).toInt()
+            val newWidthSpec = MeasureSpec.makeMeasureSpec(compensatedWidth, mode)
 
-        (parent as? LyricPlayerView)?.post {
-            (parent as? LyricPlayerView)?.updateViewsVisibility()
+            super.onMeasure(newWidthSpec, heightMeasureSpec)
+            setMeasuredDimension(originalWidth, measuredHeight)
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         }
     }
 
-    // --- 公开 API ---
+    override fun dispatchDraw(canvas: Canvas) {
+        if (renderScale != 1.0f) {
+            canvas.withScale(renderScale, renderScale, 0f, height / 2f) {
+                super.dispatchDraw(this)
+            }
+        } else {
+            super.dispatchDraw(canvas)
+        }
+    }
+
+    fun setRenderScale(scale: Float) {
+        if (renderScale != scale) {
+            renderScale = scale
+            invalidate()
+        }
+    }
+
+    fun setTransitionConfig(config: String?) {
+        updateLayoutTransitionX(config)
+    }
 
     fun notifyLineChanged() = updateAllLines()
 
@@ -101,12 +121,19 @@ class RichLyricLineView(
     }
 
     fun setStyle(config: RichLyricLineConfig) {
-        setMainStyle(config.primary, config.marquee, config.syllable, config.gradientProgressStyle)
+        setMainStyle(
+            config.primary,
+            config.marquee,
+            config.syllable,
+            config.gradientProgressStyle,
+            config.fadingEdgeLength
+        )
         setSecondaryStyle(
             config.secondary,
             config.marquee,
             config.syllable,
-            config.gradientProgressStyle
+            config.gradientProgressStyle,
+            config.fadingEdgeLength
         )
     }
 
@@ -235,7 +262,8 @@ class RichLyricLineView(
         cfg: MainTextConfig,
         mar: MarqueeConfig,
         syl: SyllableConfig,
-        grad: Boolean
+        grad: Boolean,
+        fadingEdgeLength: Int
     ) {
         val notifyNeeded = (cfg.enableRelativeProgress != enableRelativeProgress) ||
                 (cfg.enableRelativeProgressHighlight != enableRelativeProgressHighlight)
@@ -243,7 +271,7 @@ class RichLyricLineView(
         enableRelativeProgress = cfg.enableRelativeProgress
         enableRelativeProgressHighlight = cfg.enableRelativeProgressHighlight
 
-        main.setStyle(LyricLineConfig(cfg, mar, syl, grad))
+        main.setStyle(LyricLineConfig(cfg, mar, syl, grad, fadingEdgeLength))
         if (notifyNeeded) notifyLineChanged()
     }
 
@@ -251,8 +279,9 @@ class RichLyricLineView(
         cfg: SecondaryTextConfig,
         mar: MarqueeConfig,
         syl: SyllableConfig,
-        grad: Boolean
+        grad: Boolean,
+        fadingEdgeLength: Int
     ) {
-        secondary.setStyle(LyricLineConfig(cfg, mar, syl, grad))
+        secondary.setStyle(LyricLineConfig(cfg, mar, syl, grad, fadingEdgeLength))
     }
 }

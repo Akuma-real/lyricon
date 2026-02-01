@@ -89,7 +89,8 @@ class SuperText(context: Context) : LyricPlayerView(context) {
             this.syllable = buildSyllableConfig(textStyle)
 
             this.gradientProgressStyle = textStyle.gradientProgressStyle
-            textSizeRatioInMultiLineMode = textStyle.textSizeRatioInMultiLineMode
+            scaleInMultiLineMode = textStyle.scaleInMultiLineMode
+            fadingEdgeLength = textStyle.fadingEdgeLength.coerceAtLeast(0).dp
         }
 
         setStyle(config)

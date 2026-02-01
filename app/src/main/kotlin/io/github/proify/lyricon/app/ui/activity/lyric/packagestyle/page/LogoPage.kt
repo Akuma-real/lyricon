@@ -254,8 +254,8 @@ private fun LogoGravity(sharedPreferences: SharedPreferences) {
     )
 
     val options = listOf(
-        SpinnerEntry(title = stringResource(R.string.item_logo_insertion_before)),
-        SpinnerEntry(title = stringResource(R.string.item_logo_insertion_after)),
+        SpinnerEntry(title = stringResource(R.string.item_logo_position_before)),
+        SpinnerEntry(title = stringResource(R.string.item_logo_position_after)),
     )
 
     optionKeys.forEachIndexed { index, key ->
@@ -268,7 +268,7 @@ private fun LogoGravity(sharedPreferences: SharedPreferences) {
         leftAction = {
             IconActions(painterResource(R.drawable.ic_stack))
         },
-        title = stringResource(R.string.item_logo_insertion_order),
+        title = stringResource(R.string.item_logo_position),
         items = options,
         selectedIndex = selectedIndex.intValue,
         onSelectedIndexChange = {

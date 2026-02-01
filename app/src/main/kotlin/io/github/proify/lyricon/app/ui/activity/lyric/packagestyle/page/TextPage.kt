@@ -94,10 +94,26 @@ fun TextPage(scrollBehavior: ScrollBehavior, sharedPreferences: SharedPreference
                     defaultValue = TextStyle.Defaults.TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE.toString(),
                     minValue = 0.1,
                     maxValue = 1.0,
-                    title = stringResource(R.string.item_text_size_ratio_in_multi_line_mode),
+                    title = stringResource(R.string.item_text_size_scale_in_multi_line),
                     leftAction = { IconActions(painterResource(R.drawable.ic_format_size)) },
                 )
                 TransitionConfigPreference(sharedPreferences)
+
+                InputPreference(
+                    sharedPreferences = sharedPreferences,
+                    key = "lyric_style_text_fading_edge_length",
+                    inputType = InputType.DOUBLE,
+                    maxValue = 100.0,
+                    title = stringResource(R.string.item_text_fading_edge_length),
+                    leftAction = { IconActions(painterResource(R.drawable.ic_format_size)) },
+                )
+                SwitchPreference(
+                    sharedPreferences,
+                    "lyric_style_text_gradient_progress_style",
+                    defaultValue = TextStyle.Defaults.ENABLE_GRADIENT_PROGRESS_STYLE,
+                    title = stringResource(R.string.item_text_fading_style),
+                    leftAction = { IconActions(painterResource(R.drawable.ic_gradient)) },
+                )
             }
         }
         item(key = "color") {
@@ -164,7 +180,7 @@ fun TextPage(scrollBehavior: ScrollBehavior, sharedPreferences: SharedPreference
                     inputType = InputType.INTEGER,
                     maxValue = 1000.0,
                     key = "lyric_style_text_weight",
-                    title = stringResource(R.string.item_text_weight),
+                    title = stringResource(R.string.item_text_font_weight),
                     leftAction = { IconActions(painterResource(R.drawable.ic_fontdownload)) },
                 )
 
@@ -295,13 +311,6 @@ fun TextPage(scrollBehavior: ScrollBehavior, sharedPreferences: SharedPreference
                     key = "lyric_style_text_marquee_stop_at_end",
                     title = stringResource(R.string.item_text_marquee_stop_at_end),
                     leftAction = { IconActions(painterResource(R.drawable.ic_stop_circle)) },
-                )
-                SwitchPreference(
-                    sharedPreferences,
-                    "lyric_style_text_gradient_progress_style",
-                    defaultValue = TextStyle.Defaults.ENABLE_GRADIENT_PROGRESS_STYLE,
-                    title = stringResource(R.string.item_text_gradient_progress_style),
-                    leftAction = { IconActions(painterResource(R.drawable.ic_gradient)) },
                 )
             }
         }

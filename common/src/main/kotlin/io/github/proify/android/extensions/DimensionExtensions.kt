@@ -16,7 +16,7 @@ private val displayMetrics = Resources.getSystem().displayMetrics
  *  将 DP 转换为像素 (PX) 整数。适用于布局尺寸。
  */
 val Float.dp: Int
-    get() = TypedValue.applyDimension(
+    get() = if (this == 0f) 0 else TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         this,
         displayMetrics
@@ -25,17 +25,17 @@ val Float.dp: Int
 /**
  *  @see [Float.dp]
  * */
-val Int.dp: Int get() = toFloat().dp
+val Int.dp: Int get() = if (this == 0) 0 else toFloat().dp
 
 /**
  * 将 SP 转换为像素 (PX) 浮点数。
  */
 val Float.sp: Float
-    get() = TypedValue.applyDimension(
+    get() = if (this == 0f) 0f else TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_SP,
         this,
         displayMetrics
     )
 
 /** @see [Float.sp] */
-val Int.sp: Float get() = toFloat().sp
+val Int.sp: Float get() = if (this == 0) 0f else toFloat().sp

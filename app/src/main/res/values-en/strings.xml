@@ -4,14 +4,11 @@
   ~ http://www.apache.org/licenses/LICENSE-2.0
   -->
 
-<!--suppress ALL -->
 <resources>
 
-    <!-- App Basic Information -->
     <string name="app_name">Lyricon</string>
-    <string name="xposed_description">Extend lyrics display in the status bar 🎵</string>
+    <string name="xposed_description">Extend lyrics functionality to the status bar 🎵</string>
 
-    <!-- Common Actions and Buttons -->
     <string name="confirm">Confirm</string>
     <string name="save">Save</string>
     <string name="add">Add</string>
@@ -27,124 +24,119 @@
     <string name="unknown">Unknown</string>
     <string name="author">Author</string>
 
-    <!-- Status Information -->
     <string name="status_enabled">Enabled</string>
     <string name="status_not_enabled">Disabled</string>
     <string name="module_status_activated">Activated</string>
     <string name="module_status_not_activated">Not Activated</string>
-    <string name="module_status_system_ui_safe_mode">System UI error, disabled</string>
-    <string name="module_status_waiting_for_reboot">Waiting for System UI restart</string>
+    <string name="module_status_system_ui_safe_mode">System UI anomaly, disabled</string>
+    <string name="module_status_waiting_for_reboot">Pending System UI restart</string>
 
-    <!-- Restart Operations -->
     <string name="restart_system_ui">Restart System UI</string>
     <string name="restart_app">Restart App</string>
     <string name="restart_fail">Restart Failed</string>
     <string name="message_app_restart_fail">Please ensure Root access is granted</string>
 
-    <!-- Units -->
     <string name="unit_ms">ms</string>
 
-    <!-- Activities / Settings Pages -->
     <string name="activity_settings">Settings</string>
     <string name="activity_about">About</string>
     <string name="activity_anchor">Anchor</string>
     <string name="activity_view_rules">View Controller</string>
     <string name="activity_base_lyric_style">Basic Configuration</string>
-    <string name="activity_package_style_manager">Manage Package Styles</string>
+    <string name="activity_package_style_manager">Package Configuration</string>
     <string name="activity_lyric_provider">Lyric Providers</string>
-    <string name="activity_open_source_license">Open Source License</string>
+    <string name="activity_open_source_license">Open Source Licenses</string>
 
-    <!-- Settings Items and Descriptions -->
     <string name="item_base_lyric_style">Basic Configuration</string>
     <string name="item_summary_base_lyric_style">Configure lyric position, size, and status bar display rules</string>
-    <string name="item_package_style_manager">Package Styles</string>
-    <string name="item_summary_package_style_manager">Set default styles or assign custom styles for different packages</string>
+    <string name="item_package_style_manager">Package Configurations</string>
+    <string name="item_summary_package_style_manager">Set default styles or custom styles for specific packages</string>
     <string name="item_provider_manager">Lyric Providers</string>
     <string name="item_summary_provider_manager">Manage lyric providers</string>
-    <string name="item_config_view_rules">Configure View Visibility Rules</string>
+    <string name="item_config_view_rules">View Visibility Rules</string>
     <string name="item_app_settings">Settings</string>
-    <string name="item_summary_app_settings">Configure language, theme, and more</string>
+    <string name="item_summary_app_settings">Configure language, theme, etc.</string>
     <string name="item_about_app">About</string>
-    <string name="item_summary_about_app">App information</string>
+    <string name="item_summary_about_app">Software information</string>
 
-    <!-- Package Configuration Management -->
-    <string name="manager_package_config">Manage Package Styles</string>
-    <string name="add_package_config">Add Package Style</string>
-    <string name="default_config">Default</string>
+    <string name="manager_package_config">Manage Package Configs</string>
+    <string name="add_package_config">Add Package Config</string>
 
-    <!-- App Information -->
     <string name="item_app_version">Version</string>
     <string name="item_build_time">Build Time</string>
     <string name="item_view_on_github">View on GitHub</string>
-    <string name="item_open_source_license">Open Source License</string>
-    <string name="section_music_apps">Related Apps</string>
-    <string name="section_other_apps">Other Apps</string>
+    <string name="item_open_source_license">Open Source Licenses</string>
+    <string name="section_music_apps">Related</string>
+    <string name="section_other_apps">Other</string>
     <string name="option_language_follow_system">Follow System</string>
     <string name="item_app_language">Language</string>
     <string name="item_app_theme_mode">Theme Mode</string>
     <string name="option_app_theme_mode_light">Light</string>
     <string name="option_app_theme_mode_dark">Dark</string>
     <string name="option_app_theme_mode_follow_system">Follow System</string>
-    <string name="item_app_theme_monet_color">Monet Colors</string>
+    <string name="item_app_theme_monet_color">Monet Engine</string>
 
-    <!-- Tabs / Feature Categories -->
     <string name="tab_style_text">Text</string>
     <string name="tab_style_icon">Icon</string>
     <string name="tab_style_anim">Animation</string>
 
-    <!-- Text Lyric Style -->
-    <string name="item_text_size">Size</string>
+    <string name="item_text_size">Text Size</string>
     <string name="item_text_margins">Margins</string>
     <string name="item_text_paddings">Padding</string>
     <string name="item_text_color">Color</string>
-    <string name="item_text_enable_custom_color">Custom Color</string>
+    <string name="item_text_enable_custom_color">Enable Custom Color</string>
     <string name="item_text_color_light_mode">Light Mode Color</string>
     <string name="item_text_color_dark_mode">Dark Mode Color</string>
     <string name="item_text_font">Font</string>
     <string name="item_text_typeface">Custom Typeface</string>
-    <string name="item_text_weight">Font Weight</string>
-    <string name="item_text_typeface_bold">Bold</string>
-    <string name="item_text_typeface_italic">Italic</string>
+    <string name="item_text_font_weight">Font Weight</string>
+    <string name="item_text_typeface_bold">Bold Style</string>
+    <string name="item_text_typeface_italic">Italic Style</string>
     <string name="item_text_marquee">Marquee</string>
-    <string name="item_text_marquee_speed">Speed</string>
-    <string name="item_text_marquee_space">Ghost Distance</string>
+    <string name="item_text_marquee_speed">Marquee Speed</string>
+    <string name="item_text_marquee_space">Marquee Gap</string>
     <string name="item_text_marquee_initial_delay">Initial Scroll Delay</string>
     <string name="item_text_marquee_delay">Scroll Delay</string>
-    <string name="item_text_marquee_repeat_unlimited">Enable Infinite Scroll</string>
+    <string name="item_text_marquee_repeat_unlimited">Infinite Scrolling</string>
     <string name="item_text_marquee_repeat_count">Max Scroll Count</string>
-    <string name="item_text_marquee_stop_at_end">Stop at End</string>
-    <string name="item_text_gradient_progress_style">Gradient Progress Style</string>
+    <string name="item_text_marquee_stop_at_end">Stop at the End</string>
+    <string name="item_text_fading_style">Fading Progress Style</string>
     <string name="item_text_syllable">Dynamic Lyrics</string>
-    <string name="item_text_relative_progress">Enable Relative Progress Lyrics</string>
-    <string name="item_text_relative_progress_summary">If word-level data is missing, the whole line is treated as a single word with matching highlight</string>
-    <string name="item_text_relative_progress_highlight">Show Relative Progress Highlight</string>
+    <string name="item_text_relative_progress">Enable Relative Progress</string>
+    <string name="item_text_relative_progress_summary">Treat the whole line as a single word when word-level data is missing</string>
+    <string name="item_text_relative_progress_highlight">Highlight Relative Progress</string>
     <string name="item_text_color_normal">Normal Color</string>
     <string name="item_text_color_background">Background Color</string>
     <string name="item_text_color_highlight">Highlight Color</string>
     <string name="hint_custom_color">Custom</string>
+    <string name="item_text_size_scale_in_multi_line">Text Size Ratio (Multi-line)</string>
 
-    <!-- Logo Style -->
+    <string name="item_text_transition_config">Transition Speed</string>
+    <string name="option_text_transition_config_smooth">Smooth</string>
+    <string name="option_text_transition_config_fast">Fast</string>
+    <string name="option_text_transition_config_slow">Slow</string>
+    <string name="option_text_transition_config_none">Off</string>
+
     <string name="item_logo_section_basic">Basic</string>
-    <string name="item_logo_enable">Enable</string>
+    <string name="item_logo_enable">Enable Logo</string>
     <string name="item_logo_margins">Margins</string>
     <string name="item_logo_section_coloros">ColorOS</string>
     <string name="item_logo_hide_in_coloros_capsule_mode">Hide in Capsule Mode</string>
-    <string name="item_logo_section_style">Style</string>
+    <string name="item_logo_section_style">Logo Style</string>
     <string name="item_logo_style_default">Default</string>
     <string name="item_logo_style_app_logo">App Icon</string>
-    <string name="item_logo_style_cover_square">Music Cover (Square)</string>
-    <string name="item_logo_style_cover_circle">Music Cover (Circle)</string>
+    <string name="item_logo_style_cover_square">Cover (Square)</string>
+    <string name="item_logo_style_cover_circle">Cover (Circle)</string>
     <string name="item_logo_section_color">Color</string>
     <string name="item_logo_custom_color">Custom Color</string>
     <string name="item_logo_color_light">Light Mode Color</string>
     <string name="item_logo_color_dark">Dark Mode Color</string>
-    <string name="item_logo_size">Size</string>
+    <string name="item_logo_size">Logo Size</string>
     <string name="option_logo_color_follow_text">Follow Text Color</string>
-    <string name="item_logo_insertion_order">Insertion Order</string>
-    <string name="item_logo_insertion_before">Before</string>
-    <string name="item_logo_insertion_after">After</string>
+    <string name="item_logo_position">Insertion Order</string>
+    <string name="item_logo_position_before">Before</string>
+    <string name="item_logo_position_after">After</string>
 
-    <!-- Basic Lyric Style -->
     <string name="item_base_anchor">Anchor</string>
     <string name="item_base_insertion_order">Insertion Order</string>
     <string name="item_base_insertion_before">Before</string>
@@ -154,20 +146,22 @@
     <string name="item_base_margins">Margins</string>
     <string name="item_base_paddings">Padding</string>
 
-    <!-- Visibility Rules -->
     <string name="option_visibility_default">Default</string>
     <string name="option_visibility_hide_when_playing">Hide While Playing</string>
 
-    <!-- Margins -->
     <string name="rect_left">Left</string>
     <string name="rect_top">Top</string>
     <string name="rect_right">Right</string>
     <string name="rect_bottom">Bottom</string>
 
-    <!-- Provider Information -->
-    <string name="module_tag_syllable">Dynamic Lyrics</string>
+    <string name="module_tag_syllable">Dynamic</string>
     <string name="module_tag_translation">Translation</string>
     <string name="no_provider_available">No lyric providers available</string>
-    <string name="item_base_hide_on_lock_screen">Hide on the lock screen</string>
+    <string name="item_base_lockscreen_hidden">Hide on Lock Screen</string>
+    <string name="option_provider_list_full">Full</string>
+    <string name="option_provider_list_short">Compact</string>
+    <string name="no_query_app_permission">Please grant permission to query apps</string>
+    <string name="package_config_default">Default Configuration</string>
+    <string name="item_text_fading_edge_length">Fading Edge Length</string>
 
 </resources>

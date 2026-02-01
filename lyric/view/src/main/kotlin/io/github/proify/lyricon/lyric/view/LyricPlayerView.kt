@@ -286,11 +286,10 @@ open class LyricPlayerView @JvmOverloads constructor(
         // 3. 确定缩放比例：根据总行数决定
         val totalLines = v0InternalLineCount + v1InternalLineCount
         val targetScale = if (totalLines > 1) {
-            config.textSizeRatioInMultiLineMode.coerceIn(0.1f, 2f)
+            config.scaleInMultiLineMode.coerceIn(0.1f, 2f)
         } else 1.0f
 
-        // 4. 确定是否处于“多视图吸附”模式
-        // 只要屏幕上同时出现了两个 RichLyricLineView 容器且存在缩放，就需要计算吸附
+        // 4. 确定是否处于"多视图吸附"模式
         val isMultiViewMode = totalChildCount > 1 && v1Visible && targetScale != 1.0f
 
         for (i in 0 until totalChildCount) {
@@ -331,7 +330,7 @@ open class LyricPlayerView @JvmOverloads constructor(
 
             // --- 中心吸附计算 (基于 View 容器判断) ---
             if (isMultiViewMode && view.isVisible && view.height > 0) {
-                // 计算单侧缩进量
+                // 计算单侧缩进量（基于原始高度，因为缩放在 Canvas 层）
                 val offset = (view.height * (1f - targetScale)) / 2f
                 // i=0 向下吸附，i=1 向上吸附
                 view.translationY = if (i == 0) offset else -offset
@@ -352,15 +351,7 @@ open class LyricPlayerView @JvmOverloads constructor(
         view.main.visibilityIfChanged = mainVis
         if (view.main.textSize != pBase) view.main.setTextSize(pBase)
         if (view.secondary.textSize != sBase) view.secondary.setTextSize(sBase)
-
-        // 设置缩放中心为：左侧中点
-        view.pivotX = 0f
-        view.pivotY = view.height / 2f
-
-        if (view.scaleX != scale) {
-            view.scaleX = scale
-            view.scaleY = scale
-        }
+        view.setRenderScale(scale)
     }
 
     private fun createDoubleLineView(line: IRichLyricLine) = RichLyricLineView(
@@ -388,7 +379,8 @@ open class LyricPlayerView @JvmOverloads constructor(
                 config.primary,
                 config.marquee,
                 config.syllable,
-                config.gradientProgressStyle
+                config.gradientProgressStyle,
+                config.fadingEdgeLength
             )
         )
     }

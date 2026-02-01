@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import io.github.proify.android.extensions.getDefaultSharedPreferences
 import io.github.proify.lyricon.app.LyriconApp
-import io.github.proify.lyricon.app.R
 import io.github.proify.lyricon.app.ui.activity.lyric.packagestyle.sheet.AppCache
 import java.util.Locale
 
@@ -64,9 +63,6 @@ object AppLangUtils {
             }
         AppCache.clearLabelCache()
     }
-
-    fun getLanguages(): Array<String> =
-        LyriconApp.instance.resources.getStringArray(R.array.language_codes)
 
     class Cold(base: Context) : ContextWrapper(base)
 }

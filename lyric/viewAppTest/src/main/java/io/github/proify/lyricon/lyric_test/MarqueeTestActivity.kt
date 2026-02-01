@@ -27,15 +27,16 @@ class MarqueeTestActivity : AppCompatActivity() {
                 text = MainTextConfig(),
                 marquee = DefaultMarqueeConfig(),
                 syllable = DefaultSyllableConfig(),
-                gradientProgressStyle = true
+                gradientProgressStyle = true,
+                fadingEdgeLength = 10.dp
             ).apply {
                 text.apply {
                     textSize = 28f.sp
                     typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 }
                 marquee.apply {
-                    ghostSpacing = 0.dp.toFloat()
-                    scrollSpeed = 80f
+                    ghostSpacing = 10.dp.toFloat()
+                    scrollSpeed = 120f
                     loopDelay = 500
                     repeatCount = 9999
                     stopAtEnd = false

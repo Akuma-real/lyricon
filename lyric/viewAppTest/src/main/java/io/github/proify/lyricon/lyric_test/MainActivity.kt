@@ -7,6 +7,7 @@
 package io.github.proify.lyricon.lyric_test
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
@@ -114,11 +115,16 @@ class MainActivity : AppCompatActivity() {
         binding.sendText.setOnClickListener {
             provider.player.sendText(Uuid.random().toString())
         }
+
         binding.toggleTran.setOnClickListener {
             showtranslation = !showtranslation
             provider.player.setDisplayTranslation(showtranslation)
 
             binding.lyric.updateDisplayTranslation(showtranslation)
+        }
+
+        binding.marqueeTest.setOnClickListener {
+            startActivity(Intent(this, MarqueeTestActivity::class.java))
         }
     }
 

@@ -23,9 +23,6 @@ data class TextStyle(
     var paddings: RectF = Defaults.PADDINGS,
     var repeatOutput: Boolean = Defaults.REPEAT_OUTPUT,
 
-    @Deprecated("未支持")
-    var fadingEdgeEnabled: Boolean = Defaults.FADING_EDGE_ENABLED,
-    @Deprecated("未支持")
     var fadingEdgeLength: Int = Defaults.FADING_EDGE_LENGTH,
 
     var enableCustomTextColor: Boolean = Defaults.ENABLE_CUSTOM_TEXT_COLOR,
@@ -48,7 +45,7 @@ data class TextStyle(
 
     var relativeProgress: Boolean = Defaults.RELATIVE_PROGRESS,
     var relativeProgressHighlight: Boolean = Defaults.RELATIVE_PROGRESS_HIGHLIGHT,
-    var textSizeRatioInMultiLineMode: Float = Defaults.TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE,
+    var scaleInMultiLineMode: Float = Defaults.TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE,
 
     var transitionConfig: String? = Defaults.TRANSITION_CONFIG,
 ) : AbstractStyle(), Parcelable {
@@ -73,8 +70,7 @@ data class TextStyle(
         val PADDINGS: RectF = RectF()
         const val REPEAT_OUTPUT: Boolean = false
 
-        const val FADING_EDGE_ENABLED: Boolean = false
-        const val FADING_EDGE_LENGTH: Int = 0
+        const val FADING_EDGE_LENGTH: Int = 14
 
         const val ENABLE_CUSTOM_TEXT_COLOR: Boolean = false
         val LIGHT_MODE_COLOR: TextColor? = null
@@ -118,12 +114,8 @@ data class TextStyle(
             Defaults.DARK_MODE_COLOR
         )
 
-//        fadingEdgeEnabled = preferences.getBoolean(
-//            "lyric_style_text_fading_edge_enabled",
-//            Defaults.FADING_EDGE_ENABLED
-//        )
-//        fadingEdgeLength =
-//            preferences.getInt("lyric_style_text_fading_edge_length", Defaults.FADING_EDGE_LENGTH)
+        fadingEdgeLength =
+            preferences.getInt("lyric_style_text_fading_edge_length", Defaults.FADING_EDGE_LENGTH)
 
         typeFace = preferences.getString("lyric_style_text_typeface", Defaults.TYPE_FACE)
         typeFaceBold =
@@ -167,7 +159,7 @@ data class TextStyle(
             "lyric_style_text_relative_progress_highlight",
             Defaults.RELATIVE_PROGRESS_HIGHLIGHT
         )
-        textSizeRatioInMultiLineMode = preferences.getFloat(
+        scaleInMultiLineMode = preferences.getFloat(
             "lyric_style_text_size_ratio_in_multi_line_mode",
             Defaults.TEXT_SIZE_RATIO_IN_MULTI_LINE_MODE
         )
@@ -189,8 +181,7 @@ data class TextStyle(
         editor.putString("lyric_style_text_color_light_mode", lightModeColor.toJson())
         editor.putString("lyric_style_text_color_dark_mode", darkModeColor.toJson())
 
-        //editor.putBoolean("lyric_style_text_fading_edge_enabled", fadingEdgeEnabled)
-        //editor.putInt("lyric_style_text_fading_edge_length", fadingEdgeLength)
+        editor.putInt("lyric_style_text_fading_edge_length", fadingEdgeLength)
 
         editor.putString("lyric_style_text_typeface", typeFace)
         editor.putBoolean("lyric_style_text_typeface_bold", typeFaceBold)
@@ -214,7 +205,7 @@ data class TextStyle(
         )
         editor.putFloat(
             "lyric_style_text_size_ratio_in_multi_line_mode",
-            textSizeRatioInMultiLineMode
+            scaleInMultiLineMode
         )
 
         editor.putString(

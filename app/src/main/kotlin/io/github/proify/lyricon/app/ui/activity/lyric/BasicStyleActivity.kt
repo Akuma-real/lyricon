@@ -180,7 +180,7 @@ class BasicLyricStyleActivity : AbstractLyricActivity() {
                 leftAction = {
                     IconActions(painterResource(R.drawable.ic_visibility_off))
                 },
-                title = stringResource(R.string.item_base_hide_on_lock_screen),
+                title = stringResource(R.string.item_base_lockscreen_hidden),
             )
         }
 

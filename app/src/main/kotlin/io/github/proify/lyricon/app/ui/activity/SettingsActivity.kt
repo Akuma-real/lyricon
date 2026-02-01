@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.github.proify.lyricon.app.LyriconApp
 import io.github.proify.lyricon.app.R
 import io.github.proify.lyricon.app.compose.AppToolBarListContainer
 import io.github.proify.lyricon.app.compose.custom.miuix.basic.Card
@@ -129,14 +130,19 @@ private fun ThemeModeSelector(onChanged: () -> Unit) {
 @Composable
 private fun LanguageSelector(onChanged: () -> Unit) {
     val context = LocalContext.current
-    val languages = remember { AppLangUtils.getLanguages() }
+    val languages = getLanguages().toMutableList().apply {
+        sortBy { it }
+        add(0, AppLangUtils.DEFAULT_LANGUAGE)
+    }
     val currentLanguage = remember { AppLangUtils.getCustomizeLang(context) }
 
     val spinnerEntries = remember(languages) {
         languages.map { code ->
             val title = context.getLanguageDisplayName(code)
+            val summary = context.getLanguageDisplayName(code, AppLangUtils.DEFAULT_LOCALE)
             SpinnerEntry(
                 title = title,
+                summary = if (summary == title) null else summary
             )
         }
     }
@@ -157,13 +163,19 @@ private fun LanguageSelector(onChanged: () -> Unit) {
     )
 }
 
-private fun Context.getLanguageDisplayName(languageCode: String): String {
+fun getLanguages() =
+    LyriconApp.instance.resources.getStringArray(R.array.language_codes)
+
+private fun Context.getLanguageDisplayName(
+    languageCode: String,
+    nameLocal: Locale? = null
+): String {
     if (languageCode == AppLangUtils.DEFAULT_LANGUAGE) {
         return getString(R.string.option_language_follow_system)
     }
     return runCatching {
         val locale = Locale.forLanguageTag(languageCode)
-        locale.getDisplayName(locale).capitalize(locale)
+        locale.getDisplayName(nameLocal ?: locale).capitalize(locale)
     }.getOrDefault(languageCode)
 }
 
