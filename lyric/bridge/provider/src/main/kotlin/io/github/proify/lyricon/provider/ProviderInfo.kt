@@ -24,7 +24,8 @@ data class ProviderInfo(
     val providerPackageName: String,
     val playerPackageName: String,
     val logo: ProviderLogo? = null,
-    val metadata: ProviderMetadata? = null
+    val metadata: ProviderMetadata? = null,
+    val processName: String = playerPackageName
 ) : Parcelable {
 
     override fun equals(other: Any?): Boolean {
