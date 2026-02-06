@@ -36,7 +36,10 @@ data class Song(
         lyrics = lyrics?.mapNotNull { line ->
             if (line.duration <= 0) line.duration = line.end - line.begin
 
-            val isValid = line.begin >= 0 && line.begin < line.end && line.duration > 0
+            val isValid = line.begin >= 0
+                    && line.begin < line.end
+                    && line.duration > 0
+                    && line.text.isNullOrBlank()
             if (isValid) line else null
         }?.normalizeSortByTime()
     }
