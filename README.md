@@ -16,6 +16,10 @@
 </p>
 
 <p align="center">
+  <a href="README-English.md"><img src="https://img.shields.io/badge/Document-English-red.svg" alt="EN"></a>
+</p>
+
+<p align="center">
   词幕是基于 LSPosed 框架开发的系统级增强插件，旨在将实时歌词无缝集成于状态栏。
 </p>
 
