@@ -4,8 +4,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-@file:Suppress("unused")
-
 package io.github.proify.lyricon.lyric.view
 
 import android.annotation.SuppressLint
@@ -116,11 +114,6 @@ class RichLyricLineView(
     fun tryStartMarquee() {
         if (main.isMarqueeMode()) main.startMarquee()
         if (secondary.isMarqueeMode()) secondary.startMarquee()
-    }
-
-    fun reLayout() {
-        main.reLayout()
-        secondary.reLayout()
     }
 
     fun setStyle(config: RichLyricLineConfig) {

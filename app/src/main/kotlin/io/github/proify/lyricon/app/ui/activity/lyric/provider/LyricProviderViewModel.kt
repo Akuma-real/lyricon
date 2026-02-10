@@ -41,12 +41,12 @@ class LyricProviderViewModel(application: Application) : AndroidViewModel(applic
 
     var noQueryPermission by mutableStateOf(false)
 
-    companion object {
+    private companion object {
         private val CERTIFIED_SIGNATURES = arrayOf(
             "d75a43f76dbe80d816046f952b8d0f5f7abd71c9bd7b57786d5367c488bd5816",
-            "ba86f0c1f52d0f6a24e1b9a63eade0e8b80e7b9e20b8ef068da2e39c7b6e7b49",
-            "8488d67a39978f84fd876510e0acb85e3a0504b90fbd56f11beb2123e285fa78",
-            "4ca5ff4e5bf8418b45a8ecb46ddb91b6403ab7cc4b1a4de7e58fba12f54278e6"
+            "ba86f0c1f52d0f6a24e1b9a63eade0e8b80e7b9e20b8ef068da2e39c7b6e7b49", // trantor.app
+            "8488d67a39978f84fd876510e0acb85e3a0504b90fbd56f11beb2123e285fa78", // Salt Player
+            "4ca5ff4e5bf8418b45a8ecb46ddb91b6403ab7cc4b1a4de7e58fba12f54278e6"  // flamingo player
         )
     }
 
@@ -76,7 +76,6 @@ class LyricProviderViewModel(application: Application) : AndroidViewModel(applic
                 val collator = Collator.getInstance(Locale.getDefault())
                 val loadedModules = mutableListOf<LyricModule>()
 
-                // 分批加载以维持流畅度
                 targetPackages.chunked(6).forEach { batch ->
                     val batchResults = batch.mapNotNull { processPackage(it) }
                     loadedModules.addAll(batchResults)
