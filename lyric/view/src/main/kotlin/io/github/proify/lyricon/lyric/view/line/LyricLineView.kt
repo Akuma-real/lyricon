@@ -275,14 +275,12 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
     fun startMarquee() {
         if (isMarqueeMode()) {
             scrollXOffset = 0f
-            marquee.start()
-            animationDriver.startIfNoRunning()
+            post {
+                marquee.start()
+                animationDriver.stop()
+                animationDriver.startIfNoRunning()
+            }
         }
-    }
-
-    @Suppress("unused")
-    fun pauseMarquee() {
-        if (isMarqueeMode()) marquee.pause()
     }
 
     fun isMarqueeMode(): Boolean = lyric.isPlainText
@@ -319,7 +317,9 @@ class LyricLineView(context: Context, attrs: AttributeSet? = null) :
             if (!running && isAttachedToWindow) {
                 running = true
                 lastFrameNanos = 0L
-                Choreographer.getInstance().postFrameCallback(this)
+                post {
+                    Choreographer.getInstance().postFrameCallback(this)
+                }
             }
         }
 
