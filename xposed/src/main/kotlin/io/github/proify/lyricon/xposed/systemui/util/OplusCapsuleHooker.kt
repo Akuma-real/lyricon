@@ -39,6 +39,7 @@ object OplusCapsuleHooker {
 
     private var lastIsShowing: Boolean? = null
     private var unhook: XC_MethodHook.Unhook? = null
+    private var currentHook: SetVisibilityMethodHook? = null
 
     @SuppressLint("PrivateApi")
     fun isSupportCapsule(classLoader: ClassLoader): Boolean = try {
@@ -49,14 +50,17 @@ object OplusCapsuleHooker {
 
     fun initialize(classLoader: ClassLoader) {
         unhook?.unhook()
+        currentHook?.cleanup()
         if (!isSupportCapsule(classLoader)) return
 
+        val hook = SetVisibilityMethodHook()
+        currentHook = hook
         unhook = XposedHelpers.findAndHookMethod(
             classLoader.loadClass(
                 View::class.java.getName()
             ),
             "setVisibility",
-            Int::class.javaPrimitiveType, SetVisibilityMethodHook()
+            Int::class.javaPrimitiveType, hook
         )
     }
 
@@ -104,18 +108,31 @@ object OplusCapsuleHooker {
 
         /**
          * 检查追踪列表中是否有任意一个 view 处于 VISIBLE 状态。
+         * 同时遍历完整个列表以清理已被 GC 回收的 WeakReference。
          */
         private fun anyVisible(list: MutableList<WeakReference<View>>): Boolean {
             val iterator = list.iterator()
+            var visibleFound = false
             while (iterator.hasNext()) {
                 val ref = iterator.next().get()
                 if (ref == null) {
                     iterator.remove()
                 } else if (ref.visibility == View.VISIBLE) {
-                    return true
+                    visibleFound = true
                 }
             }
-            return false
+            return visibleFound
+        }
+
+        /**
+         * 清理所有状态：取消待执行的隐藏回调并清空追踪列表。
+         * 在 re-initialize / unhook 时调用，防止旧回调基于过期状态运行。
+         */
+        fun cleanup() {
+            pendingHideRunnable?.let { handler.removeCallbacks(it) }
+            pendingHideRunnable = null
+            capsuleViews.clear()
+            capsuleContainers.clear()
         }
 
         @Throws(Throwable::class)
